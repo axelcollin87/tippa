@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { calculatePointsForMatch, calculatePointsForGroup } from "@/lib/scoring";
+import { calculatePointsForMatch, calculatePointsForGroup, recalculateAllUsersTotalScore } from "@/lib/scoring";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { fetchWorldCupData } from "@/lib/openfootball";
@@ -13,6 +13,120 @@ async function requireAdmin() {
     throw new Error("Unauthorized");
   }
 }
+
+// --- TESTVERKTYG OCH SIMULERING ---
+
+export async function clearAllBets() {
+  await requireAdmin();
+  await prisma.matchBet.deleteMany();
+  await prisma.groupPlacementBet.deleteMany();
+  await prisma.user.updateMany({ data: { totalScore: 0 } });
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/bets");
+}
+
+export async function generateRandomGroupBets() {
+  await requireAdmin();
+  const users = await prisma.user.findMany();
+  const matches = await prisma.match.findMany({ where: { groupName: { not: null } } });
+  
+  const signs = ['1', 'X', '2'];
+  const matchBets = [];
+  
+  // Rensa gamla grupptips först för att undvika konflikter
+  await prisma.matchBet.deleteMany({ where: { match: { groupName: { not: null } } } });
+  
+  for (const user of users) {
+    for (const match of matches) {
+      matchBets.push({
+        userId: user.id,
+        matchId: match.id,
+        predictedSign: signs[Math.floor(Math.random() * signs.length)],
+        pointsAwarded: 0,
+        pointsAwardedProgress: 0
+      });
+    }
+  }
+  await prisma.matchBet.createMany({ data: matchBets });
+
+  // Slumpa placeringar
+  const groups: Record<string, Set<string>> = {};
+  for (const match of matches) {
+    if (match.groupName) {
+      if (!groups[match.groupName]) groups[match.groupName] = new Set();
+      groups[match.groupName].add(match.homeTeam);
+      groups[match.groupName].add(match.awayTeam);
+    }
+  }
+
+  await prisma.groupPlacementBet.deleteMany();
+  const placements: { userId: string; groupName: string; teamName: string; predictedRank: number; }[] = [];
+  for (const user of users) {
+     for (const groupName of Object.keys(groups)) {
+       const teams = Array.from(groups[groupName]).sort(() => 0.5 - Math.random());
+       teams.forEach((team, idx) => {
+         placements.push({
+           userId: user.id,
+           groupName,
+           teamName: team as string,
+           predictedRank: idx + 1
+         });
+       });
+     }
+  }
+  await prisma.groupPlacementBet.createMany({ data: placements });
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/bets");
+}
+
+export async function simulateMatch(formData: FormData) {
+  await requireAdmin();
+  const matchId = formData.get("matchId") as string;
+  const homeScore = Math.floor(Math.random() * 4);
+  const awayScore = Math.floor(Math.random() * 4);
+  
+  const actualSign = homeScore > awayScore ? "1" : homeScore < awayScore ? "2" : "X";
+  
+  const match = await prisma.match.findUnique({where: {id: matchId}});
+  let actualWinner = null;
+  if (!match?.groupName) {
+     actualWinner = actualSign === "1" ? match?.homeTeam : (actualSign === "2" ? match?.awayTeam : (Math.random() > 0.5 ? match?.homeTeam : match?.awayTeam));
+  }
+
+  await prisma.match.update({
+    where: { id: matchId },
+    data: { homeScore, awayScore, actualWinner, isCompleted: true }
+  });
+  
+  await calculatePointsForMatch(matchId);
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export async function clearMatchResult(formData: FormData) {
+  await requireAdmin();
+  const matchId = formData.get("matchId") as string;
+  
+  await prisma.match.update({
+     where: { id: matchId },
+     data: { homeScore: null, awayScore: null, actualSign: null, actualWinner: null, isCompleted: false }
+  });
+
+  await prisma.matchBet.updateMany({
+     where: { matchId },
+     data: { pointsAwarded: 0, pointsAwardedProgress: 0 }
+  });
+  
+  await recalculateAllUsersTotalScore();
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+// --- ÄLDRE FUNKTIONER ---
 
 export async function syncWithGitHub() {
   await requireAdmin();
@@ -27,9 +141,7 @@ export async function syncWithGitHub() {
     await prisma.match.deleteMany();
 
     for (const match of matches) {
-      // Skippa slutspelsträdet helt i detta skede (matcher utan grupp)
-      if (!match.group) continue;
-
+      const isKnockout = !match.group;
       const matchId = match.num?.toString() || `${match.date}-${match.team1}-${match.team2}`;
       
       let isoTimeString = "00:00:00+00:00"; 
@@ -51,8 +163,8 @@ export async function syncWithGitHub() {
       
       const kickoff = new Date(`${match.date}T${isoTimeString}`);
 
-      // Extrahera gruppbokstav från "Group A" -> "A"
-      const groupName = match.group.replace("Group ", "").trim();
+      // Extrahera gruppbokstav från "Group A" -> "A", eller null för slutspel
+      const groupName = match.group ? match.group.replace("Group ", "").trim() : null;
       
       await prisma.match.upsert({
         where: { id: matchId },
@@ -99,6 +211,7 @@ export async function updateMatchResult(formData: FormData) {
   const matchId = formData.get("matchId") as string;
   const homeScoreRaw = formData.get("homeScore");
   const awayScoreRaw = formData.get("awayScore");
+  const actualWinner = formData.get("actualWinner") as string | null;
 
   const homeScore = homeScoreRaw ? parseInt(homeScoreRaw as string, 10) : null;
   const awayScore = awayScoreRaw ? parseInt(awayScoreRaw as string, 10) : null;
@@ -110,6 +223,7 @@ export async function updateMatchResult(formData: FormData) {
     data: {
       homeScore,
       awayScore,
+      actualWinner,
       isCompleted,
     },
   });
@@ -122,18 +236,7 @@ export async function updateMatchResult(formData: FormData) {
   revalidatePath("/"); // Uppdatera även leaderboarden
 }
 
-export async function toggleGroupStageLock() {
-  await requireAdmin();
-  const config = await prisma.globalConfig.findUnique({ where: { id: "global" }});
-  
-  await prisma.globalConfig.update({
-    where: { id: "global" },
-    data: { groupStageLocked: !config?.groupStageLocked }
-  });
 
-  revalidatePath("/admin");
-  revalidatePath("/bets");
-}
 
 export async function finalizeGroupStandings(formData: FormData) {
   await requireAdmin();

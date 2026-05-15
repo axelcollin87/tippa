@@ -1,6 +1,10 @@
-# Teknisk Plan: Uppgradering av Autentisering
+# Teknisk Plan: Uppgradering av Autentisering (SLUTFÖRD)
 
-Vi går från ett enkelt inbjudningssystem till en fullskalig autentiseringslösning.
+Denna plan har implementerats. Vi har nu ett fungerande system med:
+1. CredentialsProvider (E-post/Lösenord)
+2. Admin-godkännande av nya användare
+3. Roll-baserad åtkomst (Admin/User)
+
 
 ## 1. Databasändringar (schema.prisma)
 *   Lägg till `password` (String) på `User`-modellen.

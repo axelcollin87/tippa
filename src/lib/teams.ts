@@ -1,4 +1,14 @@
+export const STAGE_TRANSLATIONS: Record<string, string> = {
+  'Round of 32': 'Sextondelsfinal',
+  'Round of 16': 'Åttondelsfinal',
+  'Quarter-final': 'Kvartsfinal',
+  'Semi-final': 'Semifinal',
+  'Match for third place': 'Bronsmatch',
+  'Final': 'Final'
+};
+
 export const TEAM_TRANSLATIONS: Record<string, { name: string; code: string }> =
+
   {
     'Algeria': { name: 'Algeriet', code: 'DZ' },
     'Argentina': { name: 'Argentina', code: 'AR' },

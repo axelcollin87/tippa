@@ -30,16 +30,7 @@ async function main() {
     await prisma.match.create({ data: match });
   }
 
-  // Global Config
-  await prisma.globalConfig.upsert({
-    where: { id: "global" },
-    update: {},
-    create: {
-      id: "global",
-      inviteCode: process.env.INVITE_CODE || "VM2026",
-      groupStageLocked: false
-    }
-  });
+
 
   console.log("Seeding klar! 6 matcher inlagda för Grupp A.");
 }

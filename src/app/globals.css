@@ -140,3 +140,87 @@
     @apply font-sans;
   }
 }
+
+/* =========================================
+   DRIVER.JS OVERRIDES (THEME MATCHING)
+   ========================================= */
+.driver-popover {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  padding: 1.5rem !important;
+  max-width: 90vw !important; /* Förhindrar att den går utanför skärmen på mobil */
+  width: 350px !important;
+}
+
+.driver-popover-title {
+  font-family: inherit !important;
+  font-weight: 900 !important;
+  font-size: 1.25rem !important;
+  color: var(--foreground) !important;
+  text-transform: uppercase !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.driver-popover-description {
+  font-family: inherit !important;
+  color: var(--muted-foreground) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.driver-popover-footer {
+  margin-top: 0 !important;
+}
+
+.driver-popover-progress-text {
+  font-family: inherit !important;
+  color: var(--muted-foreground) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
+/* Knappar i touren */
+.driver-popover-next-btn, 
+.driver-popover-prev-btn {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 0.75rem !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.5rem 1rem !important;
+  text-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Primärknapp (Nästa/Klar) */
+.driver-popover-next-btn {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+}
+
+.driver-popover-next-btn:hover {
+  opacity: 0.9 !important;
+}
+
+/* Sekundärknapp (Tillbaka) */
+.driver-popover-prev-btn {
+  background-color: var(--secondary) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background-color: color-mix(in oklch, var(--secondary) 80%, transparent) !important;
+}
+
+/* Pilen som pekar på elementet */
+.driver-popover-arrow {
+  border-color: var(--border) !important;
+}

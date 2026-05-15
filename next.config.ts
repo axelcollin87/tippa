@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['rerideapi.a.pinggy.link', 'localhost:3000'],
+  allowedDevOrigins: ['axel.a.pinggy.link', 'localhost:3000'],
 };
 
 export default nextConfig;

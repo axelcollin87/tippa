@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 
 interface CountdownProps {
   targetDate: Date;
+  label?: string;
 }
 
-export default function Countdown({ targetDate }: CountdownProps) {
+export default function Countdown({ targetDate, label }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function Countdown({ targetDate }: CountdownProps) {
 
   return (
     <span className={`font-mono text-xs font-bold ${timeLeft === "LÅST" ? "text-destructive" : "text-primary"}`}>
-      {timeLeft === "LÅST" ? "STÄNGT" : `SPELSTOPP: ${timeLeft}`}
+      {timeLeft === "LÅST" ? "STÄNGT" : `${label ? label.toUpperCase() : "SPELSTOPP"}: ${timeLeft}`}
     </span>
   );
 }

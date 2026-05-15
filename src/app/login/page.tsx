@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { registerUser } from "./actions";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
   
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,8 @@ export default function LoginPage() {
         setError(result.error);
         setIsLoading(false);
       } else {
-        router.push("/");
+        const callbackUrl = searchParams.get('callbackUrl');
+        router.push(callbackUrl || "/");
         router.refresh();
       }
     } else {

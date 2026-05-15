@@ -6,4 +6,4 @@
 * Styling: Tailwind CSS och shadcn/ui
 * Databas: PostgreSQL (Supabase)
 * ORM: Prisma
-* Autentisering: Supabase Auth
+* Autentisering: NextAuth.js (CredentialsProvider med hashed passwords)

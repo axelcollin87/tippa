@@ -1,48 +1,42 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
 model User {
   id              String              @id @default(uuid())
   email           String              @unique
   name            String
+  password        String              // Hashed password
   isAdmin         Boolean             @default(false)
+  isApproved      Boolean             @default(false) // Måste godkännas av Admin
   matchBets       MatchBet[]
   groupPlacements GroupPlacementBet[]
-  totalScore      Int                 @default(0)
+  totalScore      Int                 @default(0) 
   createdAt       DateTime            @default(now())
 }
 
 model Match {
-  id          String     @id @default(uuid())
-  stage       String     // e.g., "GROUP", "ROUND_OF_16", "FINAL"
-  groupName   String?
-  homeTeam    String
-  awayTeam    String
-  kickoff     DateTime
-  homeScore   Int?
-  awayScore   Int?
-  actualWinner String?   // Used for knockout stages (stores team name)
-  isCompleted Boolean    @default(false)
-  bets        MatchBet[]
+  id            String     @id @default(uuid())
+  stage         String     
+  groupName     String?
+  homeTeam      String
+  awayTeam      String
+  kickoff       DateTime
+  ground        String?
+  homeScore     Int?       
+  awayScore     Int?
+  actualSign    String?    
+  actualWinner  String?    // Laget som gick vidare (slutspelet)
+  isCompleted   Boolean    @default(false)
+  bets          MatchBet[]
 }
 
 model MatchBet {
-  id            String   @id @default(uuid())
-  userId        String
-  matchId       String
-  predictedHome Int
-  predictedAway Int
-  predictedWinner String? // Used for knockout stages (stores predicted team name)
-  pointsAwarded Int      @default(0)
-  user          User     @relation(fields: [userId], references: [id])
-  match         Match    @relation(fields: [matchId], references: [id])
+  id                    String   @id @default(uuid())
+  userId                String
+  matchId               String
+  predictedSign         String   
+  predictedWinner       String?  // För slutspelet (vem går vidare?)
+  pointsAwarded         Int      @default(0) 
+  pointsAwardedProgress Int      @default(0) // Poäng för avancemangs-tips
+  user                  User     @relation(fields: [userId], references: [id])
+  match                 Match    @relation(fields: [matchId], references: [id])
 
   @@unique([userId, matchId])
 }
@@ -50,18 +44,11 @@ model MatchBet {
 model GroupPlacementBet {
   id            String @id @default(uuid())
   userId        String
-  groupName     String // e.g., "A", "B"
+  groupName     String 
   teamName      String
   predictedRank Int
-  pointsAwarded Int    @default(0)
+  pointsAwarded Int    @default(0) 
   user          User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, groupName, teamName])
-}
-
-model GlobalConfig {
-  id               String   @id @default("global")
-  inviteCode       String   // The shared code required to register
-  groupStageLocked Boolean  @default(false)
-  updatedAt        DateTime @updatedAt
 }

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -12,29 +12,32 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Visa inte navbar på inloggningssidan
-  if (!session || pathname === "/login") return null;
+  if (!session || pathname === '/login') return null;
 
   const navLinks = [
-    { name: "Topplista", href: "/" },
-    { name: "Mina Tips", href: "/bets" },
+    { name: 'Start', href: '/' },
+    { name: 'Arkiv', href: '/results' },
+    { name: 'Mina Tips', href: '/bets' },
+    { name: 'Ligor', href: '/leagues' },
   ];
 
   if (session.user.isAdmin) {
-    navLinks.push({ name: "Admin", href: "/admin" });
+    navLinks.push({ name: 'Admin', href: '/admin' });
   }
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Logo / Title */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center font-bold text-primary-foreground">
-                VM
+              <div className="w-26 h-8 bg-primary rounded-md flex items-center justify-center font-bold text-primary-foreground">
+                TIPPWITS
               </div>
-              <span className="font-bold text-lg tracking-wide hidden sm:block">TIPPAFOTBOLL</span>
+              <span className="font-bold text-lg tracking-wide hidden sm:block">
+                VM-TIPSET 2026
+              </span>
             </Link>
           </div>
 
@@ -44,14 +47,17 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                id={link.href === '/bets' ? 'tour-nav-bets' : link.href === '/leagues' ? 'tour-nav-leagues' : undefined}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === link.href ? "text-primary border-b-2 border-primary py-5" : "text-muted-foreground"
+                  pathname === link.href
+                    ? 'text-primary border-b-2 border-primary py-5'
+                    : 'text-muted-foreground'
                 }`}
               >
                 {link.name}
               </Link>
             ))}
-            
+
             <button
               onClick={() => signOut()}
               className="text-sm font-medium text-muted-foreground hover:text-destructive transition-colors ml-4"
@@ -83,8 +89,8 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   pathname === link.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                 }`}
               >
                 {link.name}

@@ -65,7 +65,10 @@ export default async function JoinLeaguePage(props: { params: Promise<{ code: st
             Admin: {league.admin.name} • {league.members.length} Medlemmar
          </p>
 
-         <form action={joinLeague} className="relative z-10">
+         <form action={async (formData) => {
+            'use server';
+            await joinLeague(formData);
+         }} className="relative z-10">
             <input type="hidden" name="inviteCode" value={inviteCode} />
             <button 
               type="submit"

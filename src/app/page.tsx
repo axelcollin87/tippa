@@ -64,18 +64,17 @@ export default async function Home() {
 
       // Skapa en fiktiv "Global" liga som alltid visas
       const globalLeague = {
-      id: 'global',
-      name: 'Globala Tabellen',
-      inviteCode: 'GLOBAL',
-      adminId: 'system',
-      _count: { members: allUsers.length },
-      comments: [],
-      isGlobal: true
+        id: 'global',
+        name: 'Globala Tabellen',
+        inviteCode: 'GLOBAL',
+        adminId: 'system',
+        _count: { members: allUsers.length },
+        comments: [],
+        isGlobal: true,
+        createdAt: new Date(),
       };
 
-      const displayLeagues = [globalLeague, ...userLeagues];
-
-      const now = new Date();
+      const displayLeagues: (typeof userLeagues[0] & { isGlobal?: boolean })[] = [globalLeague, ...userLeagues];      const now = new Date();
 
   // Beräkna global ranking
   const currentUser = allUsers.find((u) => u.id === session.user.id);

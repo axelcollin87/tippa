@@ -8,8 +8,8 @@ import { Info } from "lucide-react";
 export default function InfoPopover({ title, children }: { title?: string, children: React.ReactNode }) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button 
+      <PopoverTrigger>
+        <button
           className="text-muted-foreground hover:text-primary transition-colors focus:outline-none inline-flex items-center justify-center rounded-full hover:bg-secondary/50 p-1 -m-1"
           aria-label="Mer information"
         >

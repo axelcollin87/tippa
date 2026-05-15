@@ -18,9 +18,9 @@ export default async function LeagueRoomPage(props: { params: Promise<{ id: stri
   const leagueId = params.id;
   const isGlobal = leagueId === 'global';
 
-  let leagueData;
-  let membersList;
-  let commentsList = [];
+  let leagueData: any;
+  let membersList: any[] = [];
+  let commentsList: any[] = [];
   let isAdmin = false;
   let inviteCode = 'GLOBAL';
 
@@ -111,7 +111,7 @@ export default async function LeagueRoomPage(props: { params: Promise<{ id: stri
     let anyPointsAwarded = false;
 
     chartMembers.forEach(member => {
-      const bet = member.user.matchBets.find(b => b.matchId === match.id);
+      const bet = member.user.matchBets.find((b: any) => b.matchId === match.id);
       if (bet) {
         const points = bet.pointsAwarded + bet.pointsAwardedProgress;
         currentScores[member.user.name] += points;

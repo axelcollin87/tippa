@@ -45,36 +45,40 @@ export default async function Home() {
       }),
       prisma.league.findMany({
         where: {
-          members: { some: { userId: session.user.id } }
+          members: { some: { userId: session.user.id } },
         },
         include: {
           _count: { select: { members: true } },
           comments: {
             take: 1,
             orderBy: { createdAt: 'desc' },
-            include: { user: { select: { name: true } } }
-          }
-        }
+            include: { user: { select: { name: true } } },
+          },
+        },
       }),
       prisma.user.findMany({
         orderBy: { totalScore: 'desc' },
-        select: { id: true, totalScore: true }
-      })
-      ]);
+        select: { id: true, totalScore: true },
+      }),
+    ]);
 
-      // Skapa en fiktiv "Global" liga som alltid visas
-      const globalLeague = {
-        id: 'global',
-        name: 'Globala Tabellen',
-        inviteCode: 'GLOBAL',
-        adminId: 'system',
-        _count: { members: allUsers.length },
-        comments: [],
-        isGlobal: true,
-        createdAt: new Date(),
-      };
+  // Skapa en fiktiv "Global" liga som alltid visas
+  const globalLeague = {
+    id: 'global',
+    name: 'Globala Tabellen',
+    inviteCode: 'GLOBAL',
+    adminId: 'system',
+    _count: { members: allUsers.length },
+    comments: [],
+    isGlobal: true,
+    createdAt: new Date(),
+  };
 
-      const displayLeagues: (typeof userLeagues[0] & { isGlobal?: boolean })[] = [globalLeague, ...userLeagues];      const now = new Date();
+  const displayLeagues: ((typeof userLeagues)[0] & { isGlobal?: boolean })[] = [
+    globalLeague,
+    ...userLeagues,
+  ];
+  const now = new Date();
 
   // Beräkna global ranking
   const currentUser = allUsers.find((u) => u.id === session.user.id);
@@ -154,7 +158,7 @@ export default async function Home() {
             ) : (
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest">
                 <Zap size={14} />
-                Alla tips är inne! Snyggt jobbat.
+                Alla tips är inne, snyggt jobbat!
               </div>
             )}
           </div>
@@ -319,7 +323,9 @@ export default async function Home() {
                     <div className="relative z-10 space-y-4">
                       <div className="flex justify-between items-start">
                         <h3 className="text-xl font-black uppercase tracking-tight group-hover:text-primary transition-colors flex items-center gap-2">
-                          {league.isGlobal && <span className="text-primary text-2xl">🌍</span>}
+                          {league.isGlobal && (
+                            <span className="text-primary text-2xl">🌍</span>
+                          )}
                           {league.name}
                         </h3>
                         <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-1 rounded uppercase">
@@ -343,7 +349,10 @@ export default async function Home() {
                       )}
 
                       <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-[0.2em] pt-2">
-                        {league.isGlobal ? 'Se Världsrankingen' : 'Gå till rummet'} <ArrowRight size={14} />
+                        {league.isGlobal
+                          ? 'Se Världsrankingen'
+                          : 'Gå till rummet'}{' '}
+                        <ArrowRight size={14} />
                       </div>
                     </div>
                   </Link>

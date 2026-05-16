@@ -98,22 +98,70 @@ export async function saveProgressBet(formData: FormData) {
   revalidatePath('/bets');
 }
 
-export async function saveGroupPlacement(formData: FormData) {
+export async function saveCrystalBallBet(formData: FormData) {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error('Du måste vara inloggad för att tippa.');
 
-  const groupName = formData.get('groupName') as string;
-  const rank1 = formData.get('rank1') as string;
-  const rank2 = formData.get('rank2') as string;
-  const rank3 = formData.get('rank3') as string;
-  const rank4 = formData.get('rank4') as string;
+  const questionId = formData.get('questionId') as string;
+  const answer = formData.get('answer') as string;
 
-  const selectedTeams = [rank1, rank2, rank3, rank4];
+  if (!answer || answer.trim() === '') throw new Error('Svaret kan inte vara tomt.');
+
+  const question = await prisma.sidebetQuestion.findUnique({ where: { id: questionId } });
+  if (!question) throw new Error('Frågan finns inte.');
+
+  const now = new Date();
+  if (now > question.lockedAt) {
+    throw new Error('Tiden för att svara på denna fråga har gått ut.');
+  }
+
+  await prisma.userSidebet.upsert({
+    where: {
+      userId_questionId: {
+        userId: session.user.id,
+        questionId: question.id,
+      },
+    },
+    update: { answer: answer.trim() },
+    create: {
+      userId: session.user.id,
+      questionId: question.id,
+      answer: answer.trim(),
+    },
+  });
+
+  revalidatePath('/bets');
+}
+export async function saveGroupPlacement(groupName: string, selectedTeams: string[]) {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error('Du måste vara inloggad för att tippa.');
 
   // Enkel validering att man inte valt samma lag på flera placeringar
   const uniqueTeams = new Set(selectedTeams);
   if (uniqueTeams.size !== 4 || selectedTeams.includes('')) {
     throw new Error('Du måste välja 4 unika lag för gruppen.');
+  }
+
+  // Validera att lagen faktiskt tillhör gruppen
+  const groupMatches = await prisma.match.findMany({
+    where: { groupName: groupName },
+    select: { homeTeam: true, awayTeam: true }
+  });
+
+  if (groupMatches.length === 0) {
+    throw new Error('Gruppen hittades inte.');
+  }
+
+  const validTeamsForGroup = new Set<string>();
+  groupMatches.forEach(match => {
+    validTeamsForGroup.add(match.homeTeam);
+    validTeamsForGroup.add(match.awayTeam);
+  });
+
+  for (const team of selectedTeams) {
+    if (!validTeamsForGroup.has(team)) {
+      throw new Error(`Laget ${team} tillhör inte Grupp ${groupName}.`);
+    }
   }
 
   // Kolla låsning dynamiskt baserat på första match i gruppen

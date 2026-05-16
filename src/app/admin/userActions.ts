@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
+import bcrypt from "bcryptjs";
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -36,5 +37,18 @@ export async function deleteUser(formData: FormData) {
     where: { id: userId }
   });
   
+  revalidatePath("/admin");
+}
+
+export async function resetPassword(formData: FormData) {
+  await requireAdmin();
+  const userId = formData.get("userId") as string;
+  const hashedPassword = await bcrypt.hash("abc123", 10);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
+
   revalidatePath("/admin");
 }

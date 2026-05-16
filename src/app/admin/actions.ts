@@ -20,7 +20,122 @@ export async function clearAllBets() {
   await requireAdmin();
   await prisma.matchBet.deleteMany();
   await prisma.groupPlacementBet.deleteMany();
+  await prisma.officialGroupStanding.deleteMany();
+  await prisma.userSidebet.deleteMany();
   await prisma.user.updateMany({ data: { totalScore: 0 } });
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/bets");
+}
+
+export async function seedCrystalBallQuestions() {
+  await requireAdmin();
+  
+  const existing = await prisma.sidebetQuestion.count();
+  if (existing > 0) return;
+
+  // Sätt låsningstiden till VM-premiären (exempel: 11 juni 2026 kl 20:00)
+  // Detta bör egentligen dynamiskt vara den första matchens kickoff
+  const firstMatch = await prisma.match.findFirst({ orderBy: { kickoff: 'asc' } });
+  const lockedAt = firstMatch ? firstMatch.kickoff : new Date('2026-06-11T20:00:00Z');
+
+  const questions = [
+    { question: 'Vinnare av Fotbolls-VM', points: 150, lockedAt },
+    { question: 'Tvåa i Fotbolls-VM (Silver)', points: 100, lockedAt },
+    { question: 'Trea i Fotbolls-VM (Brons)', points: 75, lockedAt },
+    { question: 'Skyttekung (Spelare)', points: 150, lockedAt },
+    { question: 'Målmaskinen (Laget som gör flest mål i gruppspelet)', points: 75, lockedAt },
+    { question: 'Kortleken (Lag som får flest röda kort)', points: 50, lockedAt },
+    { question: 'Största floppen (Lag som åker ur gruppspelet med 0 poäng)', points: 50, lockedAt },
+  ];
+
+  await prisma.sidebetQuestion.createMany({ data: questions });
+  revalidatePath("/admin");
+  revalidatePath("/bets");
+}
+
+export async function resolveCrystalBallQuestion(formData: FormData) {
+  await requireAdmin();
+  const questionId = formData.get("questionId") as string;
+  const correctAnswer = formData.get("correctAnswer") as string;
+
+  if (!correctAnswer || correctAnswer.trim() === "") return;
+
+  const question = await prisma.sidebetQuestion.findUnique({
+    where: { id: questionId },
+    include: { userBets: true }
+  });
+
+  if (!question) throw new Error("Frågan hittades inte.");
+
+  // Uppdatera facit
+  await prisma.sidebetQuestion.update({
+    where: { id: questionId },
+    data: { correctAnswer: correctAnswer.trim() }
+  });
+
+  // Rätta tipsen
+  for (const bet of question.userBets) {
+    const isCorrect = bet.answer.toLowerCase() === correctAnswer.toLowerCase().trim();
+    const points = isCorrect ? question.points : 0;
+
+    await prisma.userSidebet.update({
+      where: { id: bet.id },
+      data: { pointsAwarded: points }
+    });
+  }
+
+  await recalculateAllUsersTotalScore();
+
+  revalidatePath("/admin");
+  revalidatePath("/bets");
+  revalidatePath("/");
+}
+
+export async function clearAllMatchResults() {
+  await requireAdmin();
+  
+  // Nollställ alla matcher
+  await prisma.match.updateMany({
+    data: {
+      homeScore: null,
+      awayScore: null,
+      actualSign: null,
+      actualWinner: null,
+      isCompleted: false
+    }
+  });
+
+  // Återställ lag-namnen till original-placeholders från API:et
+  try {
+    const rawMatches = await fetchWorldCupData();
+    for (const rm of rawMatches) {
+      const matchId = rm.num?.toString() || `${rm.date}-${rm.team1}-${rm.team2}`;
+      await prisma.match.updateMany({
+        where: { id: matchId },
+        data: { homeTeam: rm.team1, awayTeam: rm.team2 }
+      });
+    }
+  } catch (error) {
+    console.error("Kunde inte hämta API-data för att återställa slutspelsträdet:", error);
+  }
+
+  // Nollställ poängen i alla tips (men behåll själva tipsen)
+  await prisma.matchBet.updateMany({
+    data: {
+      pointsAwarded: 0,
+      pointsAwardedProgress: 0
+    }
+  });
+
+  // Nollställ officiella grupptabeller
+  await prisma.officialGroupStanding.deleteMany();
+
+  // Räkna om allas totalpoäng (blir 0)
+  await prisma.user.updateMany({
+    data: { totalScore: 0 }
+  });
+
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/bets");
@@ -138,6 +253,8 @@ export async function syncWithGitHub() {
     // Nollställ databasen (Tips och Matcher)
     await prisma.matchBet.deleteMany();
     await prisma.groupPlacementBet.deleteMany();
+    await prisma.officialGroupStanding.deleteMany();
+    await prisma.userSidebet.deleteMany();
     await prisma.match.deleteMany();
 
     for (const match of matches) {
@@ -218,6 +335,8 @@ export async function updateMatchResult(formData: FormData) {
 
   const isCompleted = homeScore !== null && awayScore !== null;
 
+  const matchToUpdate = await prisma.match.findUnique({ where: { id: matchId } });
+  
   await prisma.match.update({
     where: { id: matchId },
     data: {
@@ -230,10 +349,64 @@ export async function updateMatchResult(formData: FormData) {
 
   if (isCompleted) {
     await calculatePointsForMatch(matchId);
+
+    // Auto-fyll nästa runda i slutspelsträdet om vi har en vinnare
+    if (actualWinner && matchToUpdate) {
+      const loser = actualWinner === matchToUpdate.homeTeam ? matchToUpdate.awayTeam : matchToUpdate.homeTeam;
+      
+      const futureMatches = await prisma.match.findMany({
+        where: {
+          groupName: null,
+          isCompleted: false,
+          OR: [
+            { homeTeam: { in: [`W${matchId}`, `L${matchId}`] } },
+            { awayTeam: { in: [`W${matchId}`, `L${matchId}`] } }
+          ]
+        }
+      });
+
+      for (const futureMatch of futureMatches) {
+        let newHome = futureMatch.homeTeam;
+        let newAway = futureMatch.awayTeam;
+
+        if (newHome === `W${matchId}`) newHome = actualWinner;
+        if (newHome === `L${matchId}`) newHome = loser;
+        if (newAway === `W${matchId}`) newAway = actualWinner;
+        if (newAway === `L${matchId}`) newAway = loser;
+
+        await prisma.match.update({
+          where: { id: futureMatch.id },
+          data: { homeTeam: newHome, awayTeam: newAway }
+        });
+      }
+    }
   }
 
   revalidatePath("/admin");
   revalidatePath("/"); // Uppdatera även leaderboarden
+}
+
+export async function updateKnockoutTeams(formData: FormData) {
+  await requireAdmin();
+  const matchId = formData.get("matchId") as string;
+  const homeTeam = formData.get("homeTeam") as string;
+  const awayTeam = formData.get("awayTeam") as string;
+
+  if (!homeTeam || !awayTeam) {
+    throw new Error("Båda lagen måste anges.");
+  }
+
+  await prisma.match.update({
+    where: { id: matchId },
+    data: {
+      homeTeam,
+      awayTeam,
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/bets");
+  revalidatePath("/");
 }
 
 
@@ -254,6 +427,43 @@ export async function finalizeGroupStandings(formData: FormData) {
   ];
 
   await calculatePointsForGroup(groupName, actualStandings);
+
+  // Spara officiella resultat i databasen för att kunna visa "Fastställd" i UI
+  await prisma.officialGroupStanding.deleteMany({ where: { groupName } });
+  await prisma.officialGroupStanding.createMany({
+    data: actualStandings.map(s => ({
+      groupName,
+      teamName: s.teamName,
+      rank: s.rank
+    }))
+  });
+
+  // Auto-fyll slutspelsträdet för 1an och 2an i gruppen
+  const matchesToUpdate = await prisma.match.findMany({
+    where: {
+      groupName: null,
+      isCompleted: false,
+      OR: [
+        { homeTeam: { in: [`1${groupName}`, `2${groupName}`] } },
+        { awayTeam: { in: [`1${groupName}`, `2${groupName}`] } }
+      ]
+    }
+  });
+
+  for (const match of matchesToUpdate) {
+    let newHome = match.homeTeam;
+    let newAway = match.awayTeam;
+
+    if (newHome === `1${groupName}`) newHome = rank1;
+    if (newHome === `2${groupName}`) newHome = rank2;
+    if (newAway === `1${groupName}`) newAway = rank1;
+    if (newAway === `2${groupName}`) newAway = rank2;
+
+    await prisma.match.update({
+      where: { id: match.id },
+      data: { homeTeam: newHome, awayTeam: newAway }
+    });
+  }
 
   revalidatePath("/admin");
   revalidatePath("/");

@@ -125,6 +125,7 @@ export async function sendLeagueComment(leagueId: string, content: string) {
   if (!session) throw new Error('Not authenticated');
 
   if (!content || content.trim().length === 0) return;
+  if (content.length > 500) throw new Error('Meddelandet är för långt (max 500 tecken)');
 
   // Kontrollera medlemskap
   const membership = await prisma.leagueMember.findUnique({
@@ -137,6 +138,22 @@ export async function sendLeagueComment(leagueId: string, content: string) {
   });
 
   if (!membership) throw new Error('Du är inte medlem i denna liga');
+
+  // Rate limiting: Max 5 meddelanden senaste minuten i just denna ligan för denna användare
+  const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+  const recentCommentsCount = await prisma.leagueComment.count({
+    where: {
+      userId: session.user.id,
+      leagueId: leagueId,
+      createdAt: {
+        gte: oneMinuteAgo,
+      },
+    },
+  });
+
+  if (recentCommentsCount >= 5) {
+    throw new Error('Du skickar meddelanden för snabbt. Vänta en stund.');
+  }
 
   await prisma.leagueComment.create({
     data: {

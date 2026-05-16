@@ -5,10 +5,14 @@ import { sendLeagueComment } from './actions';
 import { getLeagueComments } from './chatActions';
 import { Send } from 'lucide-react';
 
-export default function ChatBox({ leagueId, initialComments, currentUserId }: { 
-  leagueId: string, 
-  initialComments: any[], 
-  currentUserId: string 
+export default function ChatBox({
+  leagueId,
+  initialComments,
+  currentUserId,
+}: {
+  leagueId: string;
+  initialComments: any[];
+  currentUserId: string;
 }) {
   const [comment, setComment] = useState('');
   const [isPending, setIsPending] = useState(false);
@@ -21,7 +25,7 @@ export default function ChatBox({ leagueId, initialComments, currentUserId }: {
         const latestComments = await getLeagueComments(leagueId);
         setComments(latestComments);
       } catch (error) {
-        console.error("Failed to fetch comments", error);
+        console.error('Failed to fetch comments', error);
       }
     }, 10000);
 
@@ -49,7 +53,9 @@ export default function ChatBox({ leagueId, initialComments, currentUserId }: {
   return (
     <div className="flex flex-col h-[600px] bg-card border border-border rounded-3xl overflow-hidden shadow-xl">
       <div className="p-6 border-b border-border bg-secondary/30">
-        <h3 className="font-black text-xl uppercase tracking-tight">Trashtalk</h3>
+        <h3 className="font-black text-xl uppercase tracking-tight">
+          Gruppchat
+        </h3>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col-reverse">
@@ -57,18 +63,28 @@ export default function ChatBox({ leagueId, initialComments, currentUserId }: {
         {comments.map((c) => {
           const isMe = c.userId === currentUserId;
           return (
-            <div key={c.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+            <div
+              key={c.id}
+              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+            >
               <div className="flex items-center gap-2 mb-1 px-2">
                 <span className="text-[10px] font-black uppercase text-muted-foreground">
                   {c.user.name}
                 </span>
                 <span className="text-[9px] text-muted-foreground/50">
-                  {new Date(c.createdAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(c.createdAt).toLocaleTimeString('sv-SE', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </span>
               </div>
-              <div className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm font-medium ${
-                isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-secondary text-foreground rounded-tl-none'
-              }`}>
+              <div
+                className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm font-medium ${
+                  isMe
+                    ? 'bg-primary text-primary-foreground rounded-tr-none'
+                    : 'bg-secondary text-foreground rounded-tl-none'
+                }`}
+              >
                 {c.content}
               </div>
             </div>
@@ -81,7 +97,10 @@ export default function ChatBox({ leagueId, initialComments, currentUserId }: {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-secondary/10 flex gap-2">
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 border-t border-border bg-secondary/10 flex gap-2"
+      >
         <input
           value={comment}
           onChange={(e) => setComment(e.target.value)}

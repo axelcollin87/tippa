@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -49,41 +49,30 @@
 }
 
 :root {
-  /* Tvinga allt till mörkt tema (Sport/Neon Vibe) */
-  --background: oklch(0.15 0.01 260); /* Mycket mörk grå/blå */
-  --foreground: oklch(0.98 0 0); /* Nästan vit */
-  
-  --card: oklch(0.20 0.02 260); /* Något ljusare än background */
+  --background: oklch(0.15 0.01 260);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.2 0.02 260);
   --card-foreground: oklch(0.98 0 0);
-  
-  --popover: oklch(0.20 0.02 260);
+  --popover: oklch(0.2 0.02 260);
   --popover-foreground: oklch(0.98 0 0);
-  
-  /* NEON GRÖN PRIMARY */
-  --primary: oklch(0.75 0.18 150); /* Skarp sport-grön */
-  --primary-foreground: oklch(0.1 0.05 150); /* Mörk text på grön */
-  
+  --primary: oklch(0.75 0.18 150);
+  --primary-foreground: oklch(0.1 0.05 150);
   --secondary: oklch(0.25 0.03 260);
   --secondary-foreground: oklch(0.98 0 0);
-  
   --muted: oklch(0.25 0.03 260);
   --muted-foreground: oklch(0.65 0.02 260);
-  
-  --accent: oklch(0.75 0.18 150); /* Använd neon för accent också */
+  --accent: oklch(0.75 0.18 150);
   --accent-foreground: oklch(0.1 0.05 150);
-  
-  --destructive: oklch(0.4 0.2 25); /* Röd */
+  --destructive: oklch(0.4 0.2 25);
   --border: oklch(0.28 0.03 260);
   --input: oklch(0.28 0.03 260);
-  --ring: oklch(0.75 0.18 150); /* Neon grön focus-ring */
-  
+  --ring: oklch(0.75 0.18 150);
   --chart-1: oklch(0.75 0.18 150);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.75rem;
-  
   --sidebar: oklch(0.15 0.01 260);
   --sidebar-foreground: oklch(0.98 0 0);
   --sidebar-primary: oklch(0.75 0.18 150);
@@ -95,12 +84,11 @@
 }
 
 .dark {
-  /* Samma mörka tema */
   --background: oklch(0.15 0.01 260);
   --foreground: oklch(0.98 0 0);
-  --card: oklch(0.20 0.02 260);
+  --card: oklch(0.2 0.02 260);
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.20 0.02 260);
+  --popover: oklch(0.2 0.02 260);
   --popover-foreground: oklch(0.98 0 0);
   --primary: oklch(0.75 0.18 150);
   --primary-foreground: oklch(0.1 0.05 150);
@@ -141,17 +129,14 @@
   }
 }
 
-/* =========================================
-   DRIVER.JS OVERRIDES (THEME MATCHING)
-   ========================================= */
 .driver-popover {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
-  border: 1px solid var(--border) !important;
+  border: 1.5px solid color-mix(in oklch, var(--border), var(--foreground) 20%) !important;
   border-radius: var(--radius-xl) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
   padding: 1.5rem !important;
-  max-width: 90vw !important; /* Förhindrar att den går utanför skärmen på mobil */
+  max-width: 90vw !important;
   width: 350px !important;
 }
 
@@ -172,6 +157,17 @@
   margin-bottom: 1.5rem !important;
 }
 
+.driver-popover-close-btn {
+  color: var(--foreground) !important;
+  opacity: 1 !important;
+  transition: all 0.2s ease !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: var(--primary) !important;
+  transform: scale(2.15) !important;
+}
+
 .driver-popover-footer {
   margin-top: 0 !important;
 }
@@ -184,8 +180,7 @@
   text-transform: uppercase !important;
 }
 
-/* Knappar i touren */
-.driver-popover-next-btn, 
+.driver-popover-next-btn,
 .driver-popover-prev-btn {
   font-family: inherit !important;
   font-weight: 700 !important;
@@ -198,7 +193,6 @@
   transition: all 0.2s ease !important;
 }
 
-/* Primärknapp (Nästa/Klar) */
 .driver-popover-next-btn {
   background-color: var(--primary) !important;
   color: var(--primary-foreground) !important;
@@ -209,7 +203,6 @@
   opacity: 0.9 !important;
 }
 
-/* Sekundärknapp (Tillbaka) */
 .driver-popover-prev-btn {
   background-color: var(--secondary) !important;
   color: var(--foreground) !important;
@@ -217,10 +210,13 @@
 }
 
 .driver-popover-prev-btn:hover {
-  background-color: color-mix(in oklch, var(--secondary) 80%, transparent) !important;
+  background-color: color-mix(
+    in oklch,
+    var(--secondary) 80%,
+    transparent
+  ) !important;
 }
 
-/* Pilen som pekar på elementet */
 .driver-popover-arrow {
-  border-color: var(--border) !important;
+  border-color: white !important;
 }

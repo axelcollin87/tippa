@@ -12,46 +12,47 @@ model User {
   id              String              @id @default(uuid())
   email           String              @unique
   name            String
-  password        String              // Hashed password
+  password        String // Hashed password
   isAdmin         Boolean             @default(false)
   isApproved      Boolean             @default(false) // Måste godkännas av Admin
   matchBets       MatchBet[]
   groupPlacements GroupPlacementBet[]
-  totalScore      Int                 @default(0) 
+  totalScore      Int                 @default(0)
   createdAt       DateTime            @default(now())
 
   // Liga-relationer
-  adminLigas        League[]            @relation("LeagueAdmin")
+  adminLigas        League[]        @relation("LeagueAdmin")
   leagueMemberships LeagueMember[]
   leagueComments    LeagueComment[]
+  UserSidebet       UserSidebet[]
 }
 
 model Match {
-  id            String     @id @default(uuid())
-  stage         String     
-  groupName     String?
-  homeTeam      String
-  awayTeam      String
-  kickoff       DateTime
-  ground        String?
-  homeScore     Int?       
-  awayScore     Int?
-  actualSign    String?    
-  actualWinner  String?    // Laget som gick vidare (slutspelet)
-  isCompleted   Boolean    @default(false)
-  bets          MatchBet[]
+  id           String     @id @default(uuid())
+  stage        String
+  groupName    String?
+  homeTeam     String
+  awayTeam     String
+  kickoff      DateTime
+  ground       String?
+  homeScore    Int?
+  awayScore    Int?
+  actualSign   String?
+  actualWinner String? // Laget som gick vidare (slutspelet)
+  isCompleted  Boolean    @default(false)
+  bets         MatchBet[]
 }
 
 model MatchBet {
-  id                    String   @id @default(uuid())
+  id                    String  @id @default(uuid())
   userId                String
   matchId               String
-  predictedSign         String   
-  predictedWinner       String?  // För slutspelet (vem går vidare?)
-  pointsAwarded         Int      @default(0) 
-  pointsAwardedProgress Int      @default(0) // Poäng för avancemangs-tips
-  user                  User     @relation(fields: [userId], references: [id])
-  match                 Match    @relation(fields: [matchId], references: [id])
+  predictedSign         String
+  predictedWinner       String? // För slutspelet (vem går vidare?)
+  pointsAwarded         Int     @default(0)
+  pointsAwardedProgress Int     @default(0) // Poäng för avancemangs-tips
+  user                  User    @relation(fields: [userId], references: [id])
+  match                 Match   @relation(fields: [matchId], references: [id])
 
   @@unique([userId, matchId])
 }
@@ -59,35 +60,35 @@ model MatchBet {
 model GroupPlacementBet {
   id            String @id @default(uuid())
   userId        String
-  groupName     String 
+  groupName     String
   teamName      String
   predictedRank Int
-  pointsAwarded Int    @default(0) 
+  pointsAwarded Int    @default(0)
   user          User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, groupName, teamName])
 }
 
 model League {
-  id          String          @id @default(uuid())
-  name        String
-  inviteCode  String          @unique
-  adminId     String
-  admin       User            @relation("LeagueAdmin", fields: [adminId], references: [id])
-  createdAt   DateTime        @default(now())
-  
-  members     LeagueMember[]
-  comments    LeagueComment[]
+  id         String   @id @default(uuid())
+  name       String
+  inviteCode String   @unique
+  adminId    String
+  admin      User     @relation("LeagueAdmin", fields: [adminId], references: [id])
+  createdAt  DateTime @default(now())
+
+  members  LeagueMember[]
+  comments LeagueComment[]
 }
 
 model LeagueMember {
-  id        String   @id @default(uuid())
-  userId    String
-  leagueId  String
-  joinedAt  DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  id       String   @id @default(uuid())
+  userId   String
+  leagueId String
+  joinedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   @@unique([userId, leagueId])
 }
@@ -98,7 +99,39 @@ model LeagueComment {
   leagueId  String
   content   String
   createdAt DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+}
+
+model OfficialGroupStanding {
+  id        String @id @default(uuid())
+  groupName String
+  teamName  String
+  rank      Int
+
+  @@unique([groupName, rank])
+}
+
+model SidebetQuestion {
+  id            String   @id @default(uuid())
+  question      String
+  points        Int
+  lockedAt      DateTime // När frågan låses för tips
+  correctAnswer String? // Facit (Fylls i av admin)
+
+  userBets UserSidebet[]
+}
+
+model UserSidebet {
+  id            String @id @default(uuid())
+  userId        String
+  questionId    String
+  answer        String
+  pointsAwarded Int    @default(0)
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question SidebetQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
 }

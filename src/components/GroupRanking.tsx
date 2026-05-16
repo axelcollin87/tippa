@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { saveGroupPlacement } from '@/app/bets/actions';
 import TeamBadge from './TeamBadge';
-import { ChevronUp, ChevronDown, Save, Lock } from 'lucide-react';
+import { ChevronUp, ChevronDown, Save, Lock, Trophy } from 'lucide-react';
 
 interface Props {
   groupName: string;
-  teams: string[];
-  initialPlacements: { teamName: string; predictedRank: number }[];
+  teams: string[]; // Standard laglista (bokstavsordning eller liknande)
+  initialPlacements: any[];
   isLocked: boolean;
+  officialStandings?: any[]; // Ny: Officiella resultat från admin
 }
 
 export default function GroupRanking({
@@ -17,111 +18,134 @@ export default function GroupRanking({
   teams,
   initialPlacements,
   isLocked,
+  officialStandings = [],
 }: Props) {
-  const [orderedTeams, setOrderedTeams] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [placements, setPlacements] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string[]>([]);
+
+  const isFinalized = officialStandings.length === 4;
 
   useEffect(() => {
-    const placementMap = new Map<number, string>();
-    initialPlacements.forEach((p) =>
-      placementMap.set(p.predictedRank, p.teamName)
-    );
-
-    const sorted: string[] = [];
-    for (let i = 1; i <= 4; i++) {
-      const team = placementMap.get(i);
-      if (team && teams.includes(team)) {
-        sorted.push(team);
-      }
+    // Om vi har exakt 4 sparade tips, använd dem
+    if (initialPlacements && initialPlacements.length === 4) {
+      const sorted = [...initialPlacements]
+        .sort((a, b) => a.predictedRank - b.predictedRank)
+        .map((p) => p.teamName);
+      setPlacements(sorted);
+      setLastSaved(sorted);
+    } else {
+      // Om inga tips (eller ogiltigt antal), använd standardlistan
+      // Se till att vi bara har unika lag för att undvika render-buggar
+      const uniqueTeams = Array.from(new Set(teams));
+      setPlacements(uniqueTeams);
+      setLastSaved([]);
     }
+  }, [initialPlacements, teams]);
 
-    teams.forEach((t) => {
-      if (!sorted.includes(t)) sorted.push(t);
-    });
-
-    setOrderedTeams(sorted.slice(0, 4));
-  }, [groupName, teams, initialPlacements]);
-
-  const move = async (index: number, direction: 'up' | 'down') => {
-    if (isLocked || isLoading) return;
-
-    const newOrder = [...orderedTeams];
+  const move = (index: number, direction: 'up' | 'down') => {
+    if (isLocked || isFinalized) return;
+    const newPlacements = [...placements];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
-    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
+    if (targetIndex < 0 || targetIndex >= newPlacements.length) return;
 
-    const temp = newOrder[index];
-    newOrder[index] = newOrder[targetIndex];
-    newOrder[targetIndex] = temp;
+    const temp = newPlacements[index];
+    newPlacements[index] = newPlacements[targetIndex];
+    newPlacements[targetIndex] = temp;
 
-    setOrderedTeams(newOrder);
+    setPlacements(newPlacements);
+  };
 
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append('groupName', groupName);
-    newOrder.forEach((team, i) => {
-      formData.append(`rank${i + 1}`, team);
-    });
-
+  const handleSave = async () => {
+    setIsSaving(true);
     try {
-      await saveGroupPlacement(formData);
-    } catch (err: any) {
-      alert(err.message);
+      await saveGroupPlacement(groupName, placements);
+      setLastSaved(placements);
+    } catch (error) {
+      console.error(error);
+      alert('Kunde inte spara placeringar');
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  return (
-    <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden max-w-md mx-auto md:mx-0">
-      <div className="bg-secondary/30 px-4 py-2 border-b border-border flex justify-between items-center">
-        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-          Placering 1-4
-        </span>
-        {isLocked && <Lock size={12} className="text-muted-foreground" />}
-      </div>
+  const hasChanges = JSON.stringify(placements) !== JSON.stringify(lastSaved);
 
-      <div className="divide-y divide-border">
-        {orderedTeams.map((team, index) => {
+  return (
+    <div className={`space-y-4 p-6 rounded-[2rem] border-2 transition-all ${isFinalized ? 'bg-primary/5 border-primary/30 shadow-lg' : 'bg-card border-border'}`}>
+      {isFinalized && (
+        <div className="flex items-center justify-between border-b border-primary/20 pb-4 mb-2">
+          <div className="flex items-center gap-2 text-primary">
+            <Trophy size={18} />
+            <span className="font-black uppercase text-xs tracking-widest">Gruppen är avgjord</span>
+          </div>
+          <span className="bg-primary text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded uppercase">
+            Poäng utdelade
+          </span>
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {placements.map((teamName, index) => {
           const rank = index + 1;
-          const isAdvancing = rank <= 2;
+          const officialTeamAtRank = officialStandings.find(s => s.rank === rank)?.teamName;
+          const isCorrect = isFinalized && teamName === officialTeamAtRank;
+          
+          let statusClass = 'border-border bg-secondary/20';
+          if (isFinalized) {
+            statusClass = isCorrect 
+              ? 'border-green-500/50 bg-green-500/10' 
+              : 'border-red-500/30 bg-red-500/5 opacity-70';
+          }
 
           return (
             <div
-              key={team}
-              className="flex items-center p-3 gap-4 group hover:bg-secondary/10 transition-colors"
+              key={teamName}
+              className={`flex items-center justify-between p-3 rounded-2xl border-2 transition-all ${statusClass}`}
             >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shrink-0 shadow-sm transition-colors ${
-                  isAdvancing
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-destructive/80 text-white'
-                }`}
-              >
-                {rank}
+              <div className="flex items-center gap-4">
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${
+                    isFinalized 
+                      ? (isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white')
+                      : (rank <= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground')
+                  }`}
+                >
+                  {rank}
+                </div>
+                <div className="flex flex-col">
+                  <TeamBadge teamName={teamName} className="text-sm font-bold" />
+                  {isFinalized && !isCorrect && officialTeamAtRank && (
+                    <span className="text-[9px] font-medium text-muted-foreground italic">
+                      Rätt: {officialTeamAtRank}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <TeamBadge
-                  teamName={team}
-                  className="font-bold text-base md:text-lg"
-                />
-              </div>
-
-              {!isLocked && (
+              {isFinalized ? (
+                <div className="flex items-center gap-2">
+                  {isCorrect && (
+                    <span className="text-[10px] font-black text-green-500 bg-green-500/20 px-2 py-1 rounded uppercase tracking-wider">
+                      +50P
+                    </span>
+                  )}
+                </div>
+              ) : !isLocked && (
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => move(index, 'up')}
                     disabled={index === 0}
-                    className="p-2 hover:bg-primary/20 hover:text-primary rounded-lg disabled:opacity-0 transition-all active:scale-90"
+                    className="p-2 hover:bg-primary/20 rounded-xl disabled:opacity-0 transition-all text-primary"
                     title="Flytta upp"
                   >
                     <ChevronUp size={24} />
                   </button>
                   <button
                     onClick={() => move(index, 'down')}
-                    disabled={index === orderedTeams.length - 1}
-                    className="p-2 hover:bg-primary/20 hover:text-primary rounded-lg disabled:opacity-0 transition-all active:scale-90"
+                    disabled={index === placements.length - 1}
+                    className="p-2 hover:bg-primary/20 rounded-xl disabled:opacity-0 transition-all text-primary"
                     title="Flytta ner"
                   >
                     <ChevronDown size={24} />
@@ -132,6 +156,32 @@ export default function GroupRanking({
           );
         })}
       </div>
+
+      {!isLocked && !isFinalized && (
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !hasChanges}
+          className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+            hasChanges
+              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02]'
+              : 'bg-secondary text-muted-foreground cursor-not-allowed opacity-50'
+          }`}
+        >
+          {isSaving ? (
+            'Sparar...'
+          ) : (
+            <>
+              <Save size={18} /> {lastSaved.length > 0 ? 'Uppdatera Tips' : 'Spara Tips'}
+            </>
+          )}
+        </button>
+      )}
+
+      {isLocked && !isFinalized && (
+        <div className="flex items-center justify-center gap-2 text-destructive font-black text-[10px] uppercase tracking-widest pt-2">
+          <Lock size={12} /> Tippning låst
+        </div>
+      )}
     </div>
   );
 }

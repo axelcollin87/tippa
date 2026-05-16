@@ -90,7 +90,7 @@ export default async function Home() {
       (m) =>
         new Date(m.kickoff.getTime() - 60 * 60 * 1000) > now && !m.isCompleted
     )
-    .slice(0, 3);
+    .slice(0, 4);
 
   const activeMatches = allMatchesWithBets.filter(
     (m) => new Date(m.kickoff) <= now && !m.isCompleted
@@ -121,12 +121,34 @@ export default async function Home() {
     })
   );
 
-  const missingBetsCount = allMatchesWithBets.filter(
-    (m) =>
-      !userBets.some((b) => b.matchId === m.id) &&
-      !m.isCompleted &&
-      new Date(m.kickoff) > now
-  ).length;
+  const anyGroupMatchesLeft = allMatchesWithBets.some(
+    (m) => m.groupName && !m.isCompleted
+  );
+
+  const missingBetsCount = allMatchesWithBets.filter((m) => {
+    const isMissing = !userBets.some((b) => b.matchId === m.id);
+    const isFuture = new Date(m.kickoff) > now;
+    const isNotCompleted = !m.isCompleted;
+
+    if (!isMissing || !isFuture || !isNotCompleted) return false;
+
+    // Om det finns gruppspelsmatcher kvar som inte är klara, räkna bara dem
+    if (anyGroupMatchesLeft) {
+      return !!m.groupName;
+    }
+
+    // Om gruppspelet är helt klart, räkna bara nästa relevanta slutspelsrunda
+    // (för att inte visa 16 matcher när man bara kan veta lagen i nästa steg)
+    const firstUpcomingKnockout = allMatchesWithBets
+      .filter((km) => !km.groupName && !km.isCompleted)
+      .sort((a, b) => a.kickoff.getTime() - b.kickoff.getTime())[0];
+
+    if (firstUpcomingKnockout) {
+      return m.stage === firstUpcomingKnockout.stage;
+    }
+
+    return true;
+  }).length;
 
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8 space-y-10 max-w-6xl mx-auto">
@@ -140,12 +162,12 @@ export default async function Home() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -mr-40 -mt-40 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none"></div>
 
-        <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-10">
+        <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="flex-1 space-y-4 text-center md:text-left">
-            <h1 className="text-4xl md:text-6xl font-black text-foreground tracking-tighter leading-none">
+            <h1 className="text-3xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
               HEJ, {session.user.name?.split(' ')[0].toUpperCase()}! 👋
             </h1>
-            <p className="text-muted-foreground text-lg font-medium max-w-md">
+            <p className="text-muted-foreground text-md font-medium max-w-md">
               Välkommen tillbaka till Tippwits. Just nu ligger du på plats{' '}
               <b>#{globalRank}</b> i den globala ligan.
             </p>
@@ -213,7 +235,7 @@ export default async function Home() {
               <div className="flex items-center gap-3">
                 <Calendar className="text-primary" size={28} />
                 <h2 className="text-2xl font-black uppercase tracking-tight">
-                  Kommande
+                  Kommande matcher
                 </h2>
                 <InfoPopover title="Matcher">
                   <p>
@@ -350,7 +372,7 @@ export default async function Home() {
 
                       <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-[0.2em] pt-2">
                         {league.isGlobal
-                          ? 'Se Världsrankingen'
+                          ? 'Se totalställningen'
                           : 'Gå till rummet'}{' '}
                         <ArrowRight size={14} />
                       </div>

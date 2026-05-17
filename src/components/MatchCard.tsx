@@ -83,7 +83,7 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
     >
       {match.isCompleted && (
         <div
-          className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-black uppercase tracking-widest ${isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
+          className={`absolute top-0 right-0 md:right-60 px-3 py-1 text-[10px] font-black uppercase tracking-widest ${isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
         >
           {isCorrect ? `VINST +${pointsEarned}P` : 'FÖRLUST 0P'}
         </div>

@@ -55,23 +55,41 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
           <p className="text-muted-foreground mt-1 text-sm">Hantera matcher, användare och låsningar.</p>
         </div>
         
-        <div className="flex gap-2 bg-secondary/30 p-1 rounded-xl border border-border">
+        <div className="flex flex-wrap gap-2 bg-secondary/30 p-1 rounded-xl border border-border">
           <Link 
             href="?tab=matches" 
-            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Matcher
+            Gruppspel
+          </Link>
+          <Link 
+            href="?tab=standings" 
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'standings' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Tabeller
+          </Link>
+          <Link 
+            href="?tab=knockout" 
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'knockout' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Slutspel
           </Link>
           <Link 
             href="?tab=users" 
-            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
           >
             Användare {unapprovedUsers.length > 0 && <span className="ml-1 bg-destructive text-white px-1.5 py-0.5 rounded-full text-[8px] animate-pulse">{unapprovedUsers.length}</span>}
+          </Link>
+          <Link 
+            href="?tab=settings" 
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'settings' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Data/Inst.
           </Link>
         </div>
       </div>
 
-      {activeTab === 'users' ? (
+      {activeTab === 'users' && (
         <div className="space-y-8">
           {/* VÄNTAR PÅ GODKÄNNANDE */}
           <section className="bg-card p-6 rounded-2xl shadow-lg border border-border space-y-6">
@@ -133,7 +151,9 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
             </div>
           </section>
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'settings' && (
         <div className="space-y-12">
           
           <section className="bg-card p-6 rounded-2xl shadow-lg border border-border space-y-6">
@@ -171,36 +191,86 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
             </div>
           </section>
 
-          {Object.keys(groups).length > 0 && (
-            <section className="bg-card p-6 rounded-2xl shadow-lg border border-border">
-              <h2 className="text-xl font-bold text-foreground border-b border-border pb-4 mb-6">Fastställ Grupptabeller</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Object.keys(groups).map(groupName => {
-                  const teams = Array.from(groups[groupName]);
-                  if (teams.length < 2) return null;
+          {/* KRISTALLKULAN ADMIN */}
+          <section className="bg-card p-6 rounded-2xl shadow-lg border border-purple-500/30 space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+            <div>
+              <h2 className="text-xl font-bold text-purple-400 flex items-center gap-2">
+                <Sparkles size={20} /> Rätta Kristallkulan
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">Sätt facit för långtidsspelen. Poäng delas ut direkt.</p>
+            </div>
+            </div>
 
-                  const groupOfficial = officialStandings
-                    .filter(s => s.groupName === groupName)
-                    .sort((a, b) => a.rank - b.rank);
-
-                  const initialOrder = groupOfficial.length === 4 
-                    ? groupOfficial.map(s => s.teamName) 
-                    : teams;
-
-                  return (
-                    <AdminGroupStandings 
-                      key={groupName} 
-                      groupName={groupName} 
-                      teams={initialOrder} 
-                      initialIsFinalized={groupOfficial.length === 4}
+            {crystalQuestions.length === 0 ? (
+            <form action={seedCrystalBallQuestions}>
+              <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:scale-[1.02]">
+                Starta Kristallkulan (Generera frågor)
+              </button>
+            </form>
+            ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {crystalQuestions.map(q => (
+                <div key={q.id} className="bg-secondary/20 p-4 rounded-xl border border-border">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-sm text-foreground">{q.question}</h3>
+                    <span className="text-[10px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                      {q.points}p
+                    </span>
+                  </div>
+                  <form action={resolveCrystalBallQuestion} className="space-y-2">
+                    <input type="hidden" name="questionId" value={q.id} />
+                    <input 
+                      type="text" 
+                      name="correctAnswer" 
+                      defaultValue={q.correctAnswer || ''}
+                      placeholder="Skriv in rätt svar..."
+                      className="w-full p-2 border border-border rounded bg-background text-sm font-bold focus:ring-2 focus:ring-purple-500"
                     />
-                  );
-                })}
-              </div>
-            </section>
-          )}
+                    <button type="submit" className="w-full bg-secondary hover:bg-secondary/80 text-foreground py-2 rounded font-bold text-xs transition-colors border border-border">
+                      Spara facit & Rätta
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+            )}
+          </section>
+        </div>
+      )}
 
-          {knockoutMatches.length > 0 && (
+      {activeTab === 'standings' && Object.keys(groups).length > 0 && (
+        <section className="bg-card p-6 rounded-2xl shadow-lg border border-border">
+          <h2 className="text-xl font-bold text-foreground border-b border-border pb-4 mb-6">Fastställ Grupptabeller</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Object.keys(groups).map(groupName => {
+              const teams = Array.from(groups[groupName]);
+              if (teams.length < 2) return null;
+
+              const groupOfficial = officialStandings
+                .filter(s => s.groupName === groupName)
+                .sort((a, b) => a.rank - b.rank);
+
+              const initialOrder = groupOfficial.length === 4 
+                ? groupOfficial.map(s => s.teamName) 
+                : teams;
+
+              return (
+                <AdminGroupStandings 
+                  key={groupName} 
+                  groupName={groupName} 
+                  teams={initialOrder} 
+                  initialIsFinalized={groupOfficial.length === 4}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {(activeTab === 'matches' || activeTab === 'knockout') && (
+        <div className="space-y-8">
+          {activeTab === 'knockout' && knockoutMatches.length > 0 && (
             <section className="bg-card p-6 rounded-2xl shadow-lg border border-border space-y-6">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
@@ -246,171 +316,109 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
                   );
                 })}
               </div>
-              </section>
-              )}
+            </section>
+          )}
 
-              {/* KRISTALLKULAN ADMIN */}
-              <section className="bg-card p-6 rounded-2xl shadow-lg border border-purple-500/30 space-y-6">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-              <div>
-                <h2 className="text-xl font-bold text-purple-400 flex items-center gap-2">
-                  <Sparkles size={20} /> Rätta Kristallkulan
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">Sätt facit för långtidsspelen. Poäng delas ut direkt.</p>
-              </div>
-              </div>
-
-              {crystalQuestions.length === 0 ? (
-              <form action={seedCrystalBallQuestions}>
-                <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:scale-[1.02]">
-                  Starta Kristallkulan (Generera frågor)
-                </button>
-              </form>
-              ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {crystalQuestions.map(q => (
-                  <div key={q.id} className="bg-secondary/20 p-4 rounded-xl border border-border">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-bold text-sm text-foreground">{q.question}</h3>
-                      <span className="text-[10px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
-                        {q.points}p
-                      </span>
-                    </div>
-                    <form action={resolveCrystalBallQuestion} className="space-y-2">
-                      <input type="hidden" name="questionId" value={q.id} />
-                      <input 
-                        type="text" 
-                        name="correctAnswer" 
-                        defaultValue={q.correctAnswer || ''}
-                        placeholder="Skriv in rätt svar..."
-                        className="w-full p-2 border border-border rounded bg-background text-sm font-bold focus:ring-2 focus:ring-purple-500"
-                      />
-                      <button type="submit" className="w-full bg-secondary hover:bg-secondary/80 text-foreground py-2 rounded font-bold text-xs transition-colors border border-border">
-                        Spara facit & Rätta
-                      </button>
-                    </form>
-                  </div>
-                ))}
-              </div>
-              )}
-              </section>
-
-              <section className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">        <div className="px-6 py-5 border-b border-border bg-secondary/50 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">Matchresultat</h2>
-          <span className="text-xs font-bold bg-primary/20 text-primary px-2 py-1 rounded">DELAR UT POTTPoäng</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-card">
-              <tr>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-black text-muted-foreground uppercase tracking-wider">Tid & Grupp</th>
-                <th scope="col" className="px-6 py-4 text-right text-xs font-black text-muted-foreground uppercase tracking-wider">Hemma</th>
-                <th scope="col" className="px-6 py-4 text-center text-xs font-black text-muted-foreground uppercase tracking-wider">Mål</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-black text-muted-foreground uppercase tracking-wider">Borta</th>
-                <th scope="col" className="px-6 py-4 text-right text-xs font-black text-muted-foreground uppercase tracking-wider">Resultat</th>
-              </tr>
-            </thead>
-            <tbody className="bg-card divide-y divide-border">
-              {matches.map((match) => {
-                const date = new Date(match.kickoff).toLocaleDateString("sv-SE", { weekday: 'short', month: 'short', day: 'numeric' });
-                const time = new Date(match.kickoff).toLocaleTimeString("sv-SE", { hour: '2-digit', minute: '2-digit' });
-
-                return (
-                  <tr key={match.id} className={match.isCompleted ? "bg-primary/5" : "hover:bg-secondary/30 transition-colors"}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-foreground">{date} kl {time}</div>
-                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mt-1">{match.stage} {match.groupName !== "TBD" ? `- Grupp ${match.groupName}` : ""}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-foreground">
-                      {match.homeTeam}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <form action={updateMatchResult} className="flex flex-col items-center justify-center space-y-2">
-                        <input type="hidden" name="matchId" value={match.id} />
-                        <div className="flex items-center space-x-2">
-                          <input 
-                            type="number" 
-                            name="homeScore" 
-                            defaultValue={match.homeScore ?? ""} 
-                            className="w-14 text-center border-border rounded-md bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none sm:text-lg p-2 font-black"
-                            placeholder="-"
-                          />
-                          <span className="text-muted-foreground font-black">-</span>
-                          <input 
-                            type="number" 
-                            name="awayScore" 
-                            defaultValue={match.awayScore ?? ""} 
-                            className="w-14 text-center border-border rounded-md bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none sm:text-lg p-2 font-black"
-                            placeholder="-"
-                          />
-                        </div>
-                        
-                        {match.stage !== "Group" && (
-                          <div className="flex flex-col items-center gap-1 w-full mt-2">
-                            <span className="text-[10px] text-muted-foreground text-center leading-tight">
-                              Fyll i resultat efter ordinarie/förlängning (ej ev. straffar)
-                            </span>
-                            <span className="text-[9px] font-black text-primary uppercase mt-1">Går vidare (inkl ev straffar)</span>
-                            <select 
-                              name="actualWinner" 
-                              defaultValue={match.actualWinner ?? ""}
-                              className="w-full p-1.5 border border-border rounded bg-background text-[10px] font-bold"
-                            >
-                              <option value="">Välj vinnare...</option>
-                              <option value={match.homeTeam}>{match.homeTeam}</option>
-                              <option value={match.awayTeam}>{match.awayTeam}</option>
-                            </select>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2 w-full mt-2">
-                          <button 
-                            type="submit" 
-                            className="col-span-2 w-full bg-secondary text-foreground border border-border px-3 py-1.5 rounded hover:bg-secondary/80 text-xs font-bold transition-colors"
-                          >
-                            Spara
-                          </button>
-                          <button 
-                            type="submit" 
-                            formAction={simulateMatch}
-                            className="w-full bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-1.5 rounded hover:bg-blue-500/20 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
-                          >
-                            <Dices size={12} /> Slumpa
-                          </button>
-                          <button 
-                            type="submit" 
-                            formAction={clearMatchResult}
-                            className="w-full bg-destructive/10 text-destructive border border-destructive/20 px-2 py-1.5 rounded hover:bg-destructive/20 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
-                          >
-                            <Trash2 size={12} /> Rensa
-                          </button>
-                        </div>
-                      </form>
-
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-left font-bold text-foreground">
-                      {match.awayTeam}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      {match.isCompleted ? (
-                        <div className="flex flex-col items-end">
-                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-primary/20 text-primary uppercase">
-                            Avslutad
-                          </span>
-                          <span className="text-xs font-bold text-muted-foreground mt-1">Tecken: {match.actualSign}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-xs italic">Väntar...</span>
-                      )}
-                    </td>
+          <section className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
+            <div className="px-4 py-4 md:px-6 md:py-5 border-b border-border bg-secondary/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+              <h2 className="text-xl font-bold text-foreground">
+                {activeTab === 'matches' ? 'Gruppspelsmatcher' : 'Slutspelsmatcher'}
+              </h2>
+              <span className="text-xs font-bold bg-primary/20 text-primary px-2 py-1 rounded">DELAR UT POTTPoäng</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-card">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-left text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-wider">Tid & Info</th>
+                    <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-center text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-wider">Hemma - Mål - Borta</th>
+                    <th scope="col" className="px-4 py-3 md:px-6 md:py-4 text-right text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-wider">Resultat</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                </thead>
+                <tbody className="bg-card divide-y divide-border">
+                  {matches
+                    .filter(m => activeTab === 'matches' ? m.groupName : !m.groupName)
+                    .map((match) => {
+                    const date = new Date(match.kickoff).toLocaleDateString("sv-SE", { weekday: 'short', month: 'short', day: 'numeric' });
+                    const time = new Date(match.kickoff).toLocaleTimeString("sv-SE", { hour: '2-digit', minute: '2-digit' });
 
+                    return (
+                      <tr key={match.id} className={match.isCompleted ? "bg-primary/5" : "hover:bg-secondary/30 transition-colors"}>
+                        <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
+                          <div className="text-xs md:text-sm font-bold text-foreground">{date} kl {time}</div>
+                          <div className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-wider mt-1">{match.stage} {match.groupName && match.groupName !== "TBD" ? `- Grupp ${match.groupName}` : ""}</div>
+                        </td>
+                        <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-center">
+                          <form action={updateMatchResult} className="flex flex-col items-center justify-center space-y-2 max-w-[200px] mx-auto">
+                            <input type="hidden" name="matchId" value={match.id} />
+                            
+                            <div className="flex items-center justify-between w-full text-xs md:text-sm font-bold text-foreground px-1 mb-1">
+                              <span className="truncate max-w-[70px] text-right">{match.homeTeam}</span>
+                              <span className="truncate max-w-[70px] text-left">{match.awayTeam}</span>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <input 
+                                type="number" 
+                                name="homeScore" 
+                                defaultValue={match.homeScore ?? ""} 
+                                className="w-12 md:w-14 text-center border-border rounded-md bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none text-sm md:text-lg p-1.5 md:p-2 font-black"
+                                placeholder="-"
+                              />
+                              <span className="text-muted-foreground font-black">-</span>
+                              <input 
+                                type="number" 
+                                name="awayScore" 
+                                defaultValue={match.awayScore ?? ""} 
+                                className="w-12 md:w-14 text-center border-border rounded-md bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none text-sm md:text-lg p-1.5 md:p-2 font-black"
+                                placeholder="-"
+                              />
+                            </div>
+                            
+                            {match.stage !== "Group" && (
+                              <div className="flex flex-col items-center gap-1 w-full mt-2">
+                                <span className="text-[9px] font-black text-primary uppercase mt-1">Går vidare (inkl ev straffar)</span>
+                                <select 
+                                  name="actualWinner" 
+                                  defaultValue={match.actualWinner ?? ""}
+                                  className="w-full p-1.5 border border-border rounded bg-background text-[10px] font-bold"
+                                >
+                                  <option value="">Välj vinnare...</option>
+                                  <option value={match.homeTeam}>{match.homeTeam}</option>
+                                  <option value={match.awayTeam}>{match.awayTeam}</option>
+                                </select>
+                              </div>
+                            )}
+
+                            <div className="w-full mt-2 flex gap-2">
+                              <button 
+                                type="submit" 
+                                className="w-full bg-secondary text-foreground border border-border px-3 py-1.5 rounded hover:bg-secondary/80 text-xs font-bold transition-colors"
+                              >
+                                Spara
+                              </button>
+                            </div>
+                          </form>
+                        </td>
+                        <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-right text-xs md:text-sm">
+                          {match.isCompleted ? (
+                            <div className="flex flex-col items-end">
+                               <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] md:text-[10px] font-black bg-primary/20 text-primary uppercase">
+                                Avslutad
+                              </span>
+                              <span className="text-[10px] md:text-xs font-bold text-muted-foreground mt-1">Tecken: {match.actualSign}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-[10px] md:text-xs italic">Väntar...</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
       )}
     </div>

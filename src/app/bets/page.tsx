@@ -14,7 +14,7 @@ import MatchCard from '@/components/MatchCard';
 import CrystalBallQuestion from './CrystalBallQuestion';
 
 export default async function BetsPage(props: {
-  searchParams: Promise<{ group?: string; view?: string }>;
+  searchParams: Promise<{ group?: string; view?: string; stage?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -26,6 +26,7 @@ export default async function BetsPage(props: {
   const view = searchParams.view || 'group'; // 'group', 'knockout', 'crystalball'
   const isKnockoutView = view === 'knockout';
   const isCrystalBallView = view === 'crystalball';
+  const activeKnockoutStageId = searchParams.stage || 'r32';
 
   const [
     allMatches,
@@ -140,6 +141,16 @@ export default async function BetsPage(props: {
     }
   }
 
+  const knockoutTabs = [
+    { id: 'r32', label: '16-dels', stages: ['Round of 32'] },
+    { id: 'r16', label: '8-dels', stages: ['Round of 16'] },
+    { id: 'qf', label: 'Kvarts', stages: ['Quarter-final'] },
+    { id: 'sf', label: 'Semi', stages: ['Semi-final'] },
+    { id: 'finals', label: 'Finaler', stages: ['3rd Place', 'Final'] },
+  ];
+
+  const activeKnockoutStages = knockoutTabs.find(t => t.id === activeKnockoutStageId)?.stages || ['Round of 32'];
+
   return (
     <div className="py-6 px-3 sm:py-10 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-3 border-b border-border pb-4 md:pb-6">
@@ -209,6 +220,24 @@ export default async function BetsPage(props: {
             </Link>
           )}
         </div>
+
+        {isKnockoutView && (
+          <div className="flex flex-wrap gap-1.5 md:gap-2 pt-2 items-center">
+            {knockoutTabs.map((tab) => (
+              <Link
+                key={tab.id}
+                href={`/bets?view=knockout&stage=${tab.id}`}
+                className={`px-3 md:px-4 py-1 md:py-1.5 rounded-full font-black text-[8px] md:text-[10px] transition-all uppercase tracking-widest border ${
+                  activeKnockoutStageId === tab.id
+                    ? 'bg-primary/20 text-primary border-primary shadow-[0_0_10px_rgba(var(--primary),0.2)]'
+                    : 'bg-card text-muted-foreground hover:bg-secondary border-border'
+                }`}
+              >
+                {tab.label}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {isCrystalBallView ? (
@@ -328,7 +357,9 @@ export default async function BetsPage(props: {
             </div>
           ) : (
             <div className="grid gap-3 md:gap-4">
-              {Object.keys(knockoutStages).map((stage) => {
+              {Object.keys(knockoutStages)
+                .filter(stage => activeKnockoutStages.includes(stage))
+                .map((stage) => {
                 const stageOrder = [
                   'Round of 32',
                   'Round of 16',

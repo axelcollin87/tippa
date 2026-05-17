@@ -4,6 +4,7 @@ export const STAGE_TRANSLATIONS: Record<string, string> = {
   'Quarter-final': 'Kvartsfinal',
   'Semi-final': 'Semifinal',
   'Match for third place': 'Bronsmatch',
+  '3rd Place': 'Bronsmatch',
   'Final': 'Final'
 };
 

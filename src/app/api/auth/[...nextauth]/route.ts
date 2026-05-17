@@ -49,10 +49,26 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!existingUser) {
+          let desiredName = user.name || "Namnlös";
+          let finalName = desiredName;
+          let counter = 1;
+
+          // Se till att namnet är unikt
+          while (true) {
+            const nameExists = await prisma.user.findFirst({
+              where: { name: { equals: finalName, mode: 'insensitive' } }
+            });
+            if (!nameExists) break;
+            
+            // Om "Namnlös" finns, testa "Namnlös 2", "Namnlös 3" osv.
+            counter++;
+            finalName = `${desiredName} ${counter}`;
+          }
+
           const newUser = await prisma.user.create({
             data: {
               email: user.email,
-              name: user.name || "Namnlös",
+              name: finalName,
               isApproved: true,
               isAdmin: false,
             }

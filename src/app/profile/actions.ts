@@ -17,10 +17,24 @@ export async function updateProfile(formData: FormData) {
     return { error: 'Namnet måste vara minst 2 tecken långt' };
   }
 
+  const cleanName = name.trim();
+
   try {
+    // Kolla om namnet redan används av någon annan
+    const existingName = await prisma.user.findFirst({
+      where: { 
+        name: { equals: cleanName, mode: 'insensitive' },
+        email: { not: session.user.email } // Ignorera användarens nuvarande namn
+      }
+    });
+
+    if (existingName) {
+      return { error: 'Detta namn är redan taget av en annan användare.' };
+    }
+
     await prisma.user.update({
       where: { email: session.user.email },
-      data: { name: name.trim() },
+      data: { name: cleanName },
     });
 
     revalidatePath('/profile');

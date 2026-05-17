@@ -31,6 +31,15 @@ export async function registerUser(formData: FormData) {
     return { error: "Denna e-postadress är redan registrerad." };
   }
 
+  // Kolla om namnet (nickname) redan är taget
+  const existingName = await prisma.user.findFirst({
+    where: { name: { equals: name, mode: 'insensitive' } }
+  });
+
+  if (existingName) {
+    return { error: "Detta namn är redan taget, vänligen välj ett annat." };
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const userCount = await prisma.user.count();

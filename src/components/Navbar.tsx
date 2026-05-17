@@ -3,16 +3,16 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { 
-  Menu, 
-  X, 
-  Home, 
-  Dices, 
-  Trophy, 
-  User, 
-  BookOpen, 
+import {
+  Menu,
+  X,
+  Home,
+  Dices,
+  Trophy,
+  User,
+  BookOpen,
   Settings,
-  LogOut
+  LogOut,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -82,7 +82,10 @@ export default function Navbar() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Icon size={18} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                  <Icon
+                    size={18}
+                    className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`}
+                  />
                   <span>{link.name}</span>
                 </Link>
               );
@@ -103,7 +106,7 @@ export default function Navbar() {
             <button
               id="tour-hamburger-menu"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-muted-foreground hover:text-foreground p-2"
+              className="text-primary/80 hover:text-primary p-2"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

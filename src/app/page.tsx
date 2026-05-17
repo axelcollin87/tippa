@@ -148,10 +148,11 @@ export default async function Home() {
 
   const missingBetsCount = allMatchesWithBets.filter((m) => {
     const isMissing = !userBets.some((b) => b.matchId === m.id);
-    const isFuture = new Date(m.kickoff) > now;
+    const lockTime = new Date(m.kickoff.getTime() - 60 * 60 * 1000);
+    const isBettable = lockTime > now;
     const isNotCompleted = !m.isCompleted;
 
-    if (!isMissing || !isFuture || !isNotCompleted) return false;
+    if (!isMissing || !isBettable || !isNotCompleted) return false;
 
     // Om det finns gruppspelsmatcher kvar som inte är klara, räkna bara dem
     if (anyGroupMatchesLeft) {
@@ -165,6 +166,9 @@ export default async function Home() {
       .sort((a, b) => a.kickoff.getTime() - b.kickoff.getTime())[0];
 
     if (firstUpcomingKnockout) {
+      if (firstUpcomingKnockout.stage === '3rd Place' || firstUpcomingKnockout.stage === 'Final') {
+        return m.stage === '3rd Place' || m.stage === 'Final';
+      }
       return m.stage === firstUpcomingKnockout.stage;
     }
 

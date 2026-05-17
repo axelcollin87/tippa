@@ -126,22 +126,18 @@ export default async function BetsPage(props: {
   }
 
   return (
-    <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
-      <div className="flex flex-col gap-4 border-b border-border pb-6">
+    <div className="py-6 px-3 sm:py-10 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-3 border-b border-border pb-4 md:pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight uppercase">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight uppercase">
             Mina Tips
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="text-muted-foreground mt-1 text-[11px] md:text-sm">
             Klicka på en den grupp du vill tippa eller se resultat för.
-            Kantfärgen indikerar om gruppen är{' '}
-            <span className="text-destructive font-bold">ej påbörjad</span>/
-            <span className="text-yellow-500 font-bold">påbörjad</span>/
-            <span className="text-primary font-bold">klar</span>.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 pb-2 mt-4 items-center">
+        <div className="flex flex-wrap gap-1.5 md:gap-2 pb-2 mt-2 md:mt-4 items-center">
           {groupNames.map((g) => {
             const status = groupStatus[g];
             let statusBorder = 'border-border';
@@ -159,7 +155,7 @@ export default async function BetsPage(props: {
               <Link
                 key={g}
                 href={`/bets?group=${g}`}
-                className={`px-4 py-2 rounded-full font-black text-[10px] md:text-xs transition-all uppercase tracking-tighter border-2 ${statusBorder} ${
+                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${statusBorder} ${
                   activeGroup === g && !isCrystalBallView
                     ? 'bg-primary/80 text-background scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
                     : 'bg-card text-muted-foreground hover:bg-secondary'
@@ -170,12 +166,12 @@ export default async function BetsPage(props: {
             );
           })}
 
-          <div className="w-px h-6 bg-border mx-2"></div>
+          <div className="w-px h-6 bg-border mx-1 md:mx-2"></div>
 
           {knockoutMatches.length > 0 && (
             <Link
               href={`/bets?view=knockout`}
-              className={`px-4 py-2 rounded-full font-black text-[10px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
                 isKnockoutView
                   ? 'bg-primary/80 text-background scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
                   : 'bg-card text-muted-foreground hover:bg-secondary border-border'
@@ -187,32 +183,31 @@ export default async function BetsPage(props: {
 
           <Link
             href={`/bets?view=crystalball`}
-            className={`px-4 py-2 rounded-full font-black text-[10px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
               isCrystalBallView
                 ? 'bg-[url("https://www.transparenttextures.com/patterns/stardust.png")] bg-purple-500/20 text-purple-400 scale-105 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
                 : 'bg-card text-muted-foreground hover:bg-secondary border-border'
             }`}
           >
-            🔮 KRISTALLKULAN
+            🔮
           </Link>
         </div>
       </div>
 
       {isCrystalBallView ? (
-        <section className="space-y-6">
+        <section className="space-y-4 md:space-y-6">
           <div>
-            <h1 className="text-4xl font-black text-purple-400 uppercase tracking-widest flex items-center gap-3">
+            <h1 className="text-2xl md:text-4xl font-black text-purple-400 uppercase tracking-widest flex items-center gap-3">
               <span>🔮</span> KRISTALLKULAN
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-2xl">
+            <p className="text-muted-foreground mt-2 text-xs md:text-sm max-w-2xl">
               Långtidsspel som avgörs efter att hela turneringen är spelad.
-              Dessa tips måste läggas innan den allra första matchen i VM
-              sparkas igång. Stora poäng står på spel!
+              Måste tippas innan VM startar!
             </p>
           </div>
 
           {crystalQuestions.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:gap-4 md:grid-cols-2">
               {crystalQuestions.map((q) => {
                 const bet = crystalBets.find((b) => b.questionId === q.id);
                 return (
@@ -221,25 +216,25 @@ export default async function BetsPage(props: {
               })}
             </div>
           ) : (
-            <div className="text-center py-20 text-muted-foreground border border-dashed border-border rounded-2xl">
+            <div className="text-center py-10 md:py-20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl">
               Kristallkulan är inte aktiverad ännu.
             </div>
           )}
         </section>
       ) : !isKnockoutView && activeTeams.length > 0 ? (
         <>
-          <section className="space-y-6">
+          <section className="space-y-4 md:space-y-6">
             <div className="">
               <div>
-                <h1 className="text-4xl font-black text-primary uppercase tracking-widest">
+                <h1 className="text-2xl md:text-4xl font-black text-primary uppercase tracking-widest">
                   Grupp {activeGroup}
                 </h1>
               </div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-foreground uppercase tracking-widest">
+                <h2 className="text-lg md:text-xl font-black text-foreground uppercase tracking-widest">
                   Tabell
                 </h2>
-                <span className="text-[8px] font-black bg-primary/20 text-primary px-2 py-1 rounded">
+                <span className="text-[7px] md:text-[8px] font-black bg-primary/20 text-primary px-2 py-1 rounded">
                   50P PER RÄTT
                 </span>
                 <InfoPopover title="Grupptippning">
@@ -248,21 +243,17 @@ export default async function BetsPage(props: {
                     position (1:a till 4:e plats) i gruppen efter att sista
                     gruppspelsmatchen är spelad.
                   </p>
-                  <p className="mt-2">
-                    Tips: Denna tabell är helt frikopplad från de enskilda
-                    matchresultaten du tippar nedan.
-                  </p>
                 </InfoPopover>
                 {activeGroup && groupLockTimes[activeGroup] && (
-                  <div className="ml-4 flex items-center gap-2">
+                  <div className="ml-2 md:ml-4 flex items-center gap-2">
                     {new Date() < groupLockTimes[activeGroup] ? (
                       <Countdown
                         targetDate={groupLockTimes[activeGroup]}
-                        label="låses om"
+                        label="låses"
                       />
                     ) : (
-                      <span className="text-destructive flex items-center gap-1 text-xs font-bold uppercase">
-                        <Lock size={12} /> Låst
+                      <span className="text-destructive flex items-center gap-1 text-[10px] md:text-xs font-bold uppercase">
+                        <Lock size={10} /> Låst
                       </span>
                     )}
                   </div>
@@ -281,30 +272,16 @@ export default async function BetsPage(props: {
             />
           </section>
 
-          <section className="space-y-6 pt-4">
+          <section className="space-y-4 md:space-y-6 pt-2 md:pt-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-foreground uppercase tracking-widest">
+              <h2 className="text-lg md:text-xl font-black text-foreground uppercase tracking-widest">
                 Matcher
               </h2>
-              <span className="text-[10px] font-black bg-secondary text-muted-foreground px-2 py-1 rounded">
-                INVERSE POPULARITY
+              <span className="text-[9px] md:text-[10px] font-black bg-secondary text-muted-foreground px-2 py-1 rounded">
+                BELÖNAR SKRÄLLAR
               </span>
-              <InfoPopover title="Hur poängen räknas ut">
-                <p>
-                  Vi använder ett system som belönar skrällar. Ju färre
-                  användare som tippat på samma resultat som du, desto mer poäng
-                  får du när du har rätt!
-                </p>
-                <p className="mt-2 text-primary font-bold">
-                  Poäng = 100 - (Procent som tippat samma)
-                </p>
-                <p className="mt-2 text-xs italic">
-                  I slutspelet multipliceras poängen: x2 i åttondelsfinal, x3 i
-                  kvarten, etc.
-                </p>
-              </InfoPopover>
             </div>
-            <div className="grid gap-4">
+            <div className="grid gap-3 md:gap-4">
               {activeMatches.map((match) => (
                 <MatchCard
                   key={match.id}
@@ -316,27 +293,30 @@ export default async function BetsPage(props: {
           </section>
         </>
       ) : isKnockoutView ? (
-        <section className="space-y-6">
+        <section className="space-y-4 md:space-y-6">
           <div className="">
             <div>
-              <h1 className="text-4xl font-black text-primary uppercase tracking-widest">
+              <h1 className="text-2xl md:text-4xl font-black text-primary uppercase tracking-widest">
                 SLUTSPEL
               </h1>
             </div>
           </div>
 
           {!isGroupStageFinished ? (
-            <div className="text-center py-20 text-muted-foreground border border-dashed border-border rounded-2xl flex flex-col items-center gap-3">
-              <Lock size={32} className="text-muted-foreground opacity-50" />
-              <p className="font-bold">
+            <div className="text-center py-10 md:py-20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl flex flex-col items-center gap-3">
+              <Lock className="text-muted-foreground opacity-50 w-6 h-6 md:w-8 md:h-8" />
+              <p className="font-bold text-sm">
                 Denna del öppnar när hela gruppspelet är avslutat.
               </p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 md:gap-4">
               {Object.keys(knockoutStages).map((stage) => (
-                <div key={stage} className="space-y-4 mb-8">
-                  <h3 className="text-2xl font-black text-foreground border-b border-border pb-2 uppercase">
+                <div
+                  key={stage}
+                  className="space-y-3 md:space-y-4 mb-6 md:mb-8"
+                >
+                  <h3 className="text-xl md:text-2xl font-black text-foreground border-b border-border pb-1 md:pb-2 uppercase">
                     {STAGE_TRANSLATIONS[stage] || stage}
                   </h3>
                   {knockoutStages[stage].map((match) => (
@@ -352,8 +332,8 @@ export default async function BetsPage(props: {
           )}
         </section>
       ) : (
-        <div className="text-center py-20 text-muted-foreground border border-dashed border-border rounded-2xl">
-          Inga grupper inlästa ännu. Gå till Admin-panelen och synka datan.
+        <div className="text-center py-10 md:py-20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl">
+          Inga grupper inlästa ännu.
         </div>
       )}
     </div>

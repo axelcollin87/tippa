@@ -81,7 +81,7 @@ export function getTeamInfo(englishName: string) {
   const translation = TEAM_TRANSLATIONS[englishName];
 
   if (translation) {
-    let code = translation.code.toLowerCase();
+    const code = translation.code.toLowerCase();
 
     // FlagCDN expects exactly 'gb-eng', 'gb-wls', 'gb-sct' for UK nations.
     // For standard ISO codes (e.g., 'US', 'SE'), it just wants 'us', 'se'.

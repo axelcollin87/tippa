@@ -105,7 +105,7 @@ export default async function Home() {
         '2': await getPotentialWinningsForSign(match.id, '2'),
       };
 
-      let progressPotential = { home: 0, away: 0 };
+      const progressPotential = { home: 0, away: 0 };
       if (!match.groupName) {
         progressPotential.home = await getPotentialWinningsForSign(
           match.id,
@@ -151,56 +151,56 @@ export default async function Home() {
   }).length;
 
   return (
-    <div className="py-6 px-4 sm:px-6 lg:px-8 space-y-10 max-w-6xl mx-auto">
+    <div className="py-4 px-3 sm:py-6 sm:px-6 lg:px-8 space-y-6 sm:space-y-10 max-w-6xl mx-auto">
       <DashboardTour />
 
       {/* HERO SECTION */}
       <div
         id="tour-welcome"
-        className="relative bg-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl"
+        className="relative bg-card rounded-3xl sm:rounded-[2.5rem] border border-border overflow-hidden shadow-2xl"
       >
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -mr-40 -mt-40 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none"></div>
 
-        <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex-1 space-y-4 text-center md:text-left">
-            <h1 className="text-3xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
+        <div className="relative z-10 p-5 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-10">
+          <div className="flex-1 space-y-3 md:space-y-4 text-center md:text-left">
+            <h1 className="text-2xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
               HEJ, {session.user.name?.split(' ')[0].toUpperCase()}! 👋
             </h1>
-            <p className="text-muted-foreground text-md font-medium max-w-md">
+            <p className="text-muted-foreground text-sm md:text-md font-medium max-w-md">
               Välkommen tillbaka till Tippwits. Just nu ligger du på plats{' '}
               <b>#{globalRank}</b> i den globala ligan.
             </p>
 
             {missingBetsCount > 0 ? (
-              <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest animate-pulse">
-                <AlertCircle size={14} />
-                {missingBetsCount} otippade matcher kvar!
+              <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest animate-pulse">
+                <AlertCircle size={12} />
+                {missingBetsCount} otippade kvar!
               </div>
             ) : (
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest">
-                <Zap size={14} />
-                Alla tips är inne, snyggt jobbat!
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest">
+                <Zap size={12} />
+                Alla tips är inne!
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-            <div className="bg-secondary/50 backdrop-blur-sm p-6 rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[140px]">
-              <Trophy className="text-yellow-500 mb-2" size={24} />
-              <span className="text-3xl font-black text-foreground">
+          <div className="grid grid-cols-2 gap-3 w-full md:w-auto">
+            <div className="bg-secondary/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl md:rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[120px] md:min-w-[140px]">
+              <Trophy className="text-yellow-500 mb-1 md:mb-2" size={20} />
+              <span className="text-2xl md:text-3xl font-black text-foreground">
                 {totalPoints}
               </span>
-              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+              <span className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                 Poäng
               </span>
             </div>
-            <div className="bg-secondary/50 backdrop-blur-sm p-6 rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[140px]">
-              <Zap className="text-primary mb-2" size={24} />
-              <span className="text-3xl font-black text-foreground">
+            <div className="bg-secondary/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl md:rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[120px] md:min-w-[140px]">
+              <Zap className="text-primary mb-1 md:mb-2" size={20} />
+              <span className="text-2xl md:text-3xl font-black text-foreground">
                 #{globalRank}
               </span>
-              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+              <span className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                 Global Rank
               </span>
             </div>
@@ -209,19 +209,19 @@ export default async function Home() {
       </div>
 
       {/* DASHBOARD GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
         {/* LEFT & CENTER: MATCHES */}
-        <div className="lg:col-span-2 space-y-10">
+        <div className="lg:col-span-2 space-y-8 md:space-y-10">
           {/* LIVE MATCHES */}
           {activeMatchesWithData.length > 0 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-ping"></div>
-                <h2 className="text-2xl font-black uppercase tracking-tight text-green-500">
+            <div className="space-y-4 md:space-y-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></div>
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-green-500">
                   Live Just Nu
                 </h2>
               </div>
-              <div className="grid gap-4">
+              <div className="grid gap-3 md:gap-4">
                 {activeMatchesWithData.map((match) => (
                   <LiveMatchCard key={match.id} matchData={match} />
                 ))}
@@ -230,12 +230,12 @@ export default async function Home() {
           )}
 
           {/* UPCOMING MATCHES */}
-          <div id="tour-upcoming" className="space-y-6">
+          <div id="tour-upcoming" className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Calendar className="text-primary" size={28} />
-                <h2 className="text-2xl font-black uppercase tracking-tight">
-                  Kommande matcher
+              <div className="flex items-center gap-2 md:gap-3">
+                <Calendar className="text-primary w-6 h-6 md:w-7 md:h-7" />
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">
+                  Kommande
                 </h2>
                 <InfoPopover title="Matcher">
                   <p>
@@ -246,41 +246,41 @@ export default async function Home() {
               </div>
               <Link
                 href="/bets"
-                className="text-xs font-black text-primary uppercase hover:underline tracking-widest"
+                className="text-[10px] font-black text-primary uppercase hover:underline tracking-widest"
               >
                 Visa alla &rarr;
               </Link>
             </div>
 
-            <div className="grid gap-3">
+            <div className="grid gap-2 md:gap-3">
               {upcomingMatches.length > 0 ? (
                 upcomingMatches.map((match) => {
                   const myBet = userBets.find((b) => b.matchId === match.id);
                   return (
                     <div
                       key={match.id}
-                      className="bg-card border border-border rounded-3xl p-5 flex items-center justify-between group hover:border-primary/50 transition-all hover:shadow-lg"
+                      className="bg-card border border-border rounded-2xl md:rounded-3xl p-4 md:p-5 flex items-center justify-between group hover:border-primary/50 transition-all hover:shadow-lg"
                     >
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase tracking-widest">
+                      <div className="space-y-2 md:space-y-3">
+                        <div className="flex items-center gap-2 md:gap-3">
+                          <span className="text-[9px] md:text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase tracking-widest">
                             {match.groupName
                               ? `Grupp ${match.groupName}`
                               : match.stage}
                           </span>
                           <Countdown targetDate={match.kickoff} />
                         </div>
-                        <div className="text-xl font-black text-foreground flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <div className="text-lg md:text-xl font-black text-foreground flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
                           <TeamBadge
                             teamName={match.homeTeam}
-                            className="text-lg"
+                            className="text-md md:text-lg"
                           />
-                          <span className="text-muted-foreground text-xs font-medium uppercase opacity-30 hidden sm:inline">
+                          <span className="text-muted-foreground text-[10px] font-medium uppercase opacity-30 hidden sm:inline">
                             vs
                           </span>
                           <TeamBadge
                             teamName={match.awayTeam}
-                            className="text-lg"
+                            className="text-md md:text-lg"
                           />
                         </div>
                       </div>
@@ -288,17 +288,17 @@ export default async function Home() {
                       <div className="text-right">
                         {myBet ? (
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
-                              Ditt Tips
+                            <span className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                              Tips
                             </span>
-                            <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
+                            <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-black text-lg md:text-xl shadow-lg shadow-primary/20">
                               {myBet.predictedSign}
                             </div>
                           </div>
                         ) : (
                           <Link
                             href={`/bets`}
-                            className="bg-destructive text-destructive-foreground px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform"
+                            className="bg-destructive text-destructive-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform"
                           >
                             Tippa
                           </Link>
@@ -308,7 +308,7 @@ export default async function Home() {
                   );
                 })
               ) : (
-                <div className="bg-secondary/20 border border-dashed border-border rounded-[2rem] p-12 text-center text-muted-foreground font-medium italic">
+                <div className="bg-secondary/20 border border-dashed border-border rounded-2xl md:rounded-[2rem] p-8 md:p-12 text-center text-muted-foreground font-medium italic">
                   Inga kommande matcher just nu.
                 </div>
               )}
@@ -317,77 +317,76 @@ export default async function Home() {
         </div>
 
         {/* RIGHT: LEAGUES & SOCIAL */}
-        <div className="space-y-10">
-          <div className="space-y-6">
+        <div className="space-y-8 md:space-y-10">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-3">
-                <Users className="text-primary" size={28} />
-                <h2 className="text-2xl font-black uppercase tracking-tight">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Users className="text-primary w-6 h-6 md:w-7 md:h-7" />
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">
                   Mina Ligor
                 </h2>
               </div>
               <Link
                 href="/leagues"
-                className="text-xs font-black text-primary uppercase hover:underline tracking-widest"
+                className="text-[10px] font-black text-primary uppercase hover:underline tracking-widest"
               >
                 Hantera &rarr;
               </Link>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid gap-3 md:gap-4">
               {displayLeagues.length > 0 ? (
                 displayLeagues.map((league) => (
                   <Link
                     key={league.id}
                     href={`/leagues/${league.id}`}
-                    className={`bg-card border ${league.isGlobal ? 'border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.1)]' : 'border-border'} rounded-[2rem] p-6 hover:border-primary/50 transition-all hover:shadow-xl group relative overflow-hidden`}
+                    className={`bg-card border ${league.isGlobal ? 'border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.1)]' : 'border-border'} rounded-2xl md:rounded-[2rem] p-4 md:p-6 hover:border-primary/50 transition-all hover:shadow-xl group relative overflow-hidden`}
                   >
-                    <div className="relative z-10 space-y-4">
+                    <div className="relative z-10 space-y-3 md:space-y-4">
                       <div className="flex justify-between items-start">
-                        <h3 className="text-xl font-black uppercase tracking-tight group-hover:text-primary transition-colors flex items-center gap-2">
+                        <h3 className="text-lg md:text-xl font-black uppercase tracking-tight group-hover:text-primary transition-colors flex items-center gap-2">
                           {league.isGlobal && (
-                            <span className="text-primary text-2xl">🌍</span>
+                            <span className="text-primary text-xl md:text-2xl">🌍</span>
                           )}
                           {league.name}
                         </h3>
-                        <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-1 rounded uppercase">
+                        <span className="text-[9px] md:text-[10px] font-black bg-primary/10 text-primary px-2 py-1 rounded uppercase">
                           {league._count.members} pers
                         </span>
                       </div>
 
                       {!league.isGlobal && league.comments[0] && (
-                        <div className="bg-secondary/30 p-3 rounded-2xl flex items-start gap-3">
+                        <div className="bg-secondary/30 p-2 md:p-3 rounded-xl md:rounded-2xl flex items-start gap-2 md:gap-3">
                           <MessageSquare
-                            size={14}
-                            className="text-muted-foreground mt-1 shrink-0"
+                            className="text-muted-foreground mt-1 shrink-0 w-3 h-3 md:w-3.5 md:h-3.5"
                           />
-                          <div className="text-xs italic line-clamp-2">
+                          <div className="text-[11px] md:text-xs italic line-clamp-2">
                             <span className="font-bold not-italic text-foreground">
                               {league.comments[0].user.name}:{' '}
                             </span>
-                            "{league.comments[0].content}"
+                            &quot;{league.comments[0].content}&quot;
                           </div>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-[0.2em] pt-2">
+                      <div className="flex items-center gap-2 text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] pt-1 md:pt-2">
                         {league.isGlobal
-                          ? 'Se totalställningen'
+                          ? 'Se tabellen'
                           : 'Gå till rummet'}{' '}
-                        <ArrowRight size={14} />
+                        <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
                       </div>
                     </div>
                   </Link>
                 ))
               ) : (
-                <div className="bg-card border border-dashed border-border rounded-[2rem] p-8 text-center space-y-4">
-                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                <div className="bg-card border border-dashed border-border rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-center space-y-3 md:space-y-4">
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium leading-relaxed">
                     Du är inte med i några ligor än. Det är mycket roligare att
                     tippa tillsammans!
                   </p>
                   <Link
                     href="/leagues"
-                    className="inline-block bg-secondary text-foreground px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-secondary/80 transition-colors"
+                    className="inline-block bg-secondary text-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-secondary/80 transition-colors"
                   >
                     Skapa eller Gå med
                   </Link>

@@ -79,7 +79,7 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
 
   return (
     <div
-      className={`bg-card rounded-2xl border-2 transition-all ${resultColorClass} p-3 md:p-3 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden`}
+      className={`bg-card rounded-2xl border-2 transition-all ${resultColorClass} p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 relative overflow-hidden`}
     >
       {match.isCompleted && (
         <div
@@ -90,21 +90,21 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
       )}
 
       <div className="flex-1 w-full">
-        <div className="flex flex-col gap-1 items-start mb-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4 w-full justify-start">
-            <span className="self-start text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase tracking-tighter">
+        <div className="flex flex-col gap-1 items-start mb-2 md:mb-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 w-full justify-start">
+            <span className="self-start text-[9px] md:text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase tracking-tighter">
               {match.groupName
                 ? `Grupp ${match.groupName}`
                 : STAGE_TRANSLATIONS[match.stage] || match.stage}
             </span>
-            <span className="text-xs text-foreground font-bold">
+            <span className="text-[10px] md:text-xs text-foreground font-bold">
               {match.isCompleted ? 'AVSLUTAD' : `${date} kl ${time}`}
             </span>
           </div>
           {match.ground && !match.isCompleted && (
-            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1 mt-1 opacity-70">
+            <span className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1 mt-0.5 md:mt-1 opacity-70">
               <svg
-                className="w-3 h-3"
+                className="w-2.5 h-2.5 md:w-3 md:h-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -137,13 +137,13 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
 
           <div className="flex flex-col items-center">
             {match.isCompleted ? (
-              <div className="flex items-center gap-3 text-2xl font-black text-foreground px-4 py-1 bg-secondary/30 rounded-xl">
+              <div className="flex items-center gap-2 md:gap-3 text-xl md:text-2xl font-black text-foreground px-3 md:px-4 py-0.5 md:py-1 bg-secondary/30 rounded-lg md:rounded-xl">
                 <span>{match.homeScore}</span>
                 <span className="text-muted-foreground opacity-30">-</span>
                 <span>{match.awayScore}</span>
               </div>
             ) : (
-              <span className="text-muted-foreground text-[10px] font-black uppercase opacity-30">
+              <span className="text-muted-foreground text-[9px] md:text-[10px] font-black uppercase opacity-30">
                 VS
               </span>
             )}
@@ -159,22 +159,22 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
         </div>
 
         {!isLocked && !match.isCompleted && (
-          <div className="mt-4 hidden md:block">
+          <div className="mt-3 md:mt-4 hidden md:block">
             <Countdown targetDate={match.kickoff} />
           </div>
         )}
       </div>
 
-      <div className="w-full md:w-auto flex flex-col items-center gap-4">
+      <div className="w-full md:w-auto flex flex-col items-center gap-3 md:gap-4">
         {!isLocked && !match.isCompleted && (
-          <div className="md:hidden mb-1">
+          <div className="md:hidden mb-0.5">
             <Countdown targetDate={match.kickoff} />
           </div>
         )}
 
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-3 md:gap-4 w-full">
           <div className="flex flex-col items-center gap-1">
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex gap-1.5 md:gap-2 w-full md:w-auto">
               {['1', 'X', '2'].map((sign) => {
                 const isSelected = optimisticBet.predictedSign === sign;
                 const isActual = match.actualSign === sign;
@@ -210,7 +210,7 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
                     <button
                       type="submit"
                       disabled={isLocked || isPending}
-                      className={`w-full md:w-12 h-12 md:h-12 rounded-xl font-black text-xl md:text-2xl transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
+                      className={`w-full md:w-12 h-11 md:h-12 rounded-xl font-black text-xl md:text-2xl transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
                       {sign}
                     </button>
@@ -221,11 +221,11 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
           </div>
 
           {!match.groupName && (
-            <div className="flex flex-col items-center gap-1 border-t border-border pt-3">
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+            <div className="flex flex-col items-center gap-1 border-t border-border pt-2 md:pt-3">
+              <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest">
                 Vem går vidare?
               </span>
-              <div className="flex gap-2 w-full">
+              <div className="flex gap-1.5 md:gap-2 w-full">
                 {[match.homeTeam, match.awayTeam].map((team) => {
                   const isSelected = optimisticBet.predictedWinner === team;
                   const isActualWinner = match.actualWinner === team;
@@ -263,7 +263,7 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
                       <button
                         type="submit"
                         disabled={isLocked || isPending}
-                        className={`w-full py-2 px-1 rounded-lg font-bold text-[10px] uppercase transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
+                        className={`w-full py-1.5 md:py-2 px-1 rounded-lg font-bold text-[9px] md:text-[10px] uppercase transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
                       >
                         {team}
                       </button>
@@ -276,9 +276,9 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
         </div>
 
         {isLocked && !match.isCompleted && (
-          <div className="flex flex-col items-center w-full mt-2 gap-2">
-            <div className="flex items-center gap-1 text-destructive text-[10px] font-black uppercase">
-              <Lock size={12} /> Låst
+          <div className="flex flex-col items-center w-full mt-1 md:mt-2 gap-2">
+            <div className="flex items-center gap-1 text-destructive text-[9px] md:text-[10px] font-black uppercase">
+              <Lock size={10} /> Låst
             </div>
           </div>
         )}

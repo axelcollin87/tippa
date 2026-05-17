@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { driver } from 'driver.js';
+import { driver, type DriveStep } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
 export default function DashboardTour() {
@@ -12,7 +12,7 @@ export default function DashboardTour() {
       setTimeout(() => {
         const isMobile = window.innerWidth < 768;
 
-        const desktopSteps = [
+        const desktopSteps: DriveStep[] = [
           {
             element: '#tour-welcome',
             popover: {
@@ -55,7 +55,7 @@ export default function DashboardTour() {
           },
         ];
 
-        const mobileSteps = [
+        const mobileSteps: DriveStep[] = [
           {
             element: '#tour-welcome',
             popover: {

@@ -142,14 +142,14 @@ export default async function LeagueRoomPage(props: {
   });
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8">
+    <div className="py-4 px-3 sm:py-8 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-6 md:space-y-8">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <Link
           href="/"
-          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-sm uppercase tracking-widest"
+          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-bold text-[10px] md:text-sm uppercase tracking-widest"
         >
-          <ArrowLeft size={16} /> Tillbaka
+          <ArrowLeft size={14} /> Tillbaka
         </Link>
 
         {!isGlobal && (
@@ -166,76 +166,63 @@ export default async function LeagueRoomPage(props: {
       </div>
 
       <div
-        className={`bg-card border ${isGlobal ? 'border-primary/50' : 'border-border'} rounded-[2rem] p-8 md:p-12 relative overflow-hidden shadow-2xl`}
+        className={`bg-card border ${isGlobal ? 'border-primary/50' : 'border-border'} rounded-2xl md:rounded-[2rem] p-6 md:p-12 relative overflow-hidden shadow-2xl`}
       >
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-1 md:mb-2">
             <span
-              className={`text-[10px] font-black ${isGlobal ? 'bg-primary/20 text-primary' : 'bg-primary text-primary-foreground'} px-3 py-1 rounded-full uppercase tracking-[0.2em]`}
+              className={`text-[8px] md:text-[10px] font-black ${isGlobal ? 'bg-primary/20 text-primary' : 'bg-primary text-primary-foreground'} px-2 md:px-3 py-1 rounded-full uppercase tracking-[0.2em]`}
             >
-              {isGlobal ? '🌍 Officiell Tabell' : 'Privat Liga'}
+              {isGlobal ? '🌍 Officiell' : 'Privat Liga'}
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-foreground uppercase tracking-tighter mb-4">
+          <h1 className="text-2xl md:text-6xl font-black text-foreground uppercase tracking-tighter mb-2 md:mb-4">
             {leagueData.name}
           </h1>
-          <div className="flex items-center gap-4 text-muted-foreground font-medium">
+          <div className="flex items-center gap-3 md:gap-4 text-muted-foreground font-medium text-xs md:text-base">
             {!isGlobal && (
-              <div className="flex items-center gap-1.5">
-                <Shield size={16} className="text-yellow-500" />
+              <div className="flex items-center gap-1 md:gap-1.5">
+                <Shield size={14} className="text-yellow-500" />
                 <span>
                   Admin:{' '}
                   <span className="text-foreground font-bold">
-                    {leagueData.admin.name}
+                    {leagueData.admin.name.split(' ')[0]}
                   </span>
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1.5">
-              <Users size={16} />
-              <span>{membersList.length} Medlemmar</span>
+            <div className="flex items-center gap-1 md:gap-1.5">
+              <Users size={14} />
+              <span>{membersList.length} st</span>
             </div>
           </div>
         </div>
       </div>
 
       <div
-        className={`grid grid-cols-1 ${isGlobal ? 'lg:grid-cols-1 max-w-4xl mx-auto' : 'lg:grid-cols-3'} gap-8`}
+        className={`grid grid-cols-1 ${isGlobal ? 'lg:grid-cols-1 max-w-4xl mx-auto' : 'lg:grid-cols-3'} gap-6 md:gap-8`}
       >
         {/* LEFT COL: TRENDS & LEADERBOARD */}
-        <div className={`${isGlobal ? '' : 'lg:col-span-2'} space-y-12`}>
+        <div className={`${isGlobal ? '' : 'lg:col-span-2'} space-y-8 md:space-y-12`}>
           {/* LEADERBOARD SECTION */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Trophy className="text-yellow-500" size={28} />
-              <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Trophy className="text-yellow-500 w-6 h-6 md:w-7 md:h-7" />
+              <h2 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">
                 Topplista
               </h2>
-              {!isGlobal && (
-                <InfoPopover title="Globala Poäng">
-                  <p>
-                    Observera att denna tabell visar medlemmarnas{' '}
-                    <b>totala globala poäng</b>. Dina poäng är desamma i alla
-                    ligor du är med i.
-                  </p>
-                  <p className="mt-2 text-xs italic">
-                    Syftet med ligan är att jämföra dina globala poäng mot just
-                    dessa vänner.
-                  </p>
-                </InfoPopover>
-              )}
             </div>
 
-            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg">
+            <div className="bg-card border border-border rounded-xl md:rounded-3xl overflow-hidden shadow-lg">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-secondary/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <th className="px-6 py-4 w-16">Pos</th>
-                    <th className="px-6 py-4">Spelare</th>
-                    <th className="px-6 py-4 text-center">Rätt</th>
-                    <th className="px-6 py-4 text-right">Poäng</th>
+                  <tr className="bg-secondary/50 text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <th className="px-3 md:px-6 py-3 md:py-4 w-12 md:w-16">Pos</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4">Spelare</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center">Rätt</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right">Poäng</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -247,9 +234,9 @@ export default async function LeagueRoomPage(props: {
                         key={member.id}
                         className={`${isMe ? 'bg-primary/5' : ''} transition-colors hover:bg-secondary/30`}
                       >
-                        <td className="px-6 py-5">
+                        <td className="px-3 md:px-6 py-3 md:py-5">
                           <span
-                            className={`flex items-center justify-center w-8 h-8 rounded-lg font-black text-sm ${
+                            className={`flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded md:rounded-lg font-black text-xs md:text-sm ${
                               pos === 1
                                 ? 'bg-yellow-500 text-white'
                                 : pos === 2
@@ -262,17 +249,17 @@ export default async function LeagueRoomPage(props: {
                             {pos}
                           </span>
                         </td>
-                        <td className="px-6 py-5">
-                          <div className="font-bold text-foreground flex items-center gap-2">
-                            {member.user.name}
+                        <td className="px-3 md:px-6 py-3 md:py-5">
+                          <div className="font-bold text-foreground flex items-center gap-1 md:gap-2 text-xs md:text-base">
+                            <span className="truncate max-w-[100px] md:max-w-none">{member.user.name}</span>
                             {isMe && (
-                              <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase">
+                              <span className="text-[8px] bg-primary/20 text-primary px-1 py-0.5 rounded uppercase">
                                 Du
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-5 text-center font-bold text-muted-foreground">
+                        <td className="px-3 md:px-6 py-3 md:py-5 text-center font-bold text-muted-foreground text-xs md:text-base">
                           {
                             member.user.matchBets.filter(
                               (b: any) =>
@@ -281,8 +268,8 @@ export default async function LeagueRoomPage(props: {
                             ).length
                           }
                         </td>
-                        <td className="px-6 py-5 text-right">
-                          <span className="font-black text-lg text-primary">
+                        <td className="px-3 md:px-6 py-3 md:py-5 text-right">
+                          <span className="font-black text-md md:text-lg text-primary">
                             {member.user.totalScore}
                           </span>
                         </td>
@@ -296,27 +283,15 @@ export default async function LeagueRoomPage(props: {
         </div>
 
         {/* TRENDS SECTION */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="text-primary" size={28} />
-            <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex items-center gap-2 md:gap-3">
+            <TrendingUp className="text-primary w-6 h-6 md:w-7 md:h-7" />
+            <h2 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">
               Formkurva
             </h2>
-            <InfoPopover title="Poängutveckling">
-              <p>
-                Grafen visar medlemmarnas kumulativa poäng match för match (i
-                kronologisk ordning).
-              </p>
-              {isGlobal && (
-                <p className="mt-2 text-xs italic">
-                  Eftersom detta är den globala tabellen visas endast de 10
-                  bästa spelarna i grafen.
-                </p>
-              )}
-            </InfoPopover>
           </div>
 
-          <div className="bg-card border border-border rounded-3xl p-6 shadow-lg">
+          <div className="bg-card border border-border rounded-xl md:rounded-3xl p-3 md:p-6 shadow-lg">
             <LeagueTrendChart data={chartData} lines={chartLines} />
           </div>
         </div>

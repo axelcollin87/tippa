@@ -8,7 +8,7 @@ export default function DashboardTour() {
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('hasSeenDashboardTour');
 
-    if (hasSeenTour) {
+    if (!hasSeenTour) {
       setTimeout(() => {
         const isMobile = window.innerWidth < 768;
 
@@ -85,7 +85,7 @@ export default function DashboardTour() {
             popover: {
               title: 'Håll koll på schemat 📅',
               description:
-                'Här direkt på startsidan ser du alltid de närmaste matcherna. Missa inte att få in dina rader i tid!',
+                'Här direkt på startsidan ser du alltid de närmaste matcherna. Missa inte att få in dina tips i tid!',
               side: 'top',
               align: 'center',
             },

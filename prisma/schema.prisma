@@ -86,6 +86,9 @@ model LeagueMember {
   userId   String
   leagueId String
   joinedAt DateTime @default(now())
+  
+  isFavorite   Boolean @default(false)
+  previousRank Int?    // För trend-pilar (upp/ner/samma)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { saveGroupPlacement } from '@/app/bets/actions';
 import TeamBadge from './TeamBadge';
 import { ChevronUp, ChevronDown, Save, Lock, Trophy } from 'lucide-react';
+import { getTeamInfo } from '@/lib/teams';
 
 interface Props {
   groupName: string;
@@ -118,7 +119,7 @@ export default function GroupRanking({
                   <TeamBadge teamName={teamName} className="text-sm font-bold" />
                   {isFinalized && !isCorrect && officialTeamAtRank && (
                     <span className="text-[9px] font-medium text-muted-foreground italic">
-                      Rätt: {officialTeamAtRank}
+                      Rätt: {getTeamInfo(officialTeamAtRank).name.substring(0, 12)}
                     </span>
                   )}
                 </div>
@@ -128,7 +129,7 @@ export default function GroupRanking({
                 <div className="flex items-center gap-2">
                   {isCorrect && (
                     <span className="text-[10px] font-black text-green-500 bg-green-500/20 px-2 py-1 rounded uppercase tracking-wider">
-                      +50P
+                      +100P
                     </span>
                   )}
                 </div>

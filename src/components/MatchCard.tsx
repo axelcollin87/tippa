@@ -5,7 +5,7 @@ import { saveBet, saveProgressBet } from '@/app/bets/actions';
 import TeamBadge from './TeamBadge';
 import Countdown from './Countdown';
 import { Lock } from 'lucide-react';
-import { STAGE_TRANSLATIONS } from '@/lib/teams';
+import { STAGE_TRANSLATIONS, getTeamInfo } from '@/lib/teams';
 
 interface MatchCardProps {
   match: any;
@@ -28,7 +28,7 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
   );
 
   const lockTime = new Date(match.kickoff.getTime() - 60 * 60 * 1000);
-  const isLocked = new Date() > lockTime;
+  const isLocked = new Date() > lockTime || match.isCompleted;
 
   const date = new Date(match.kickoff).toLocaleDateString('sv-SE', {
     weekday: 'short',
@@ -265,7 +265,7 @@ export default function MatchCard({ match, userBet }: MatchCardProps) {
                         disabled={isLocked || isPending}
                         className={`w-full py-1.5 md:py-2 px-1 rounded-lg font-bold text-[9px] md:text-[10px] uppercase transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
                       >
-                        {team}
+                        {getTeamInfo(team).name.substring(0, 12)}
                       </button>
                     </form>
                   );

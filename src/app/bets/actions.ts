@@ -22,11 +22,13 @@ export async function saveBet(formData: FormData) {
 
   if (!match) throw new Error('Matchen hittades inte.');
 
-  // Lås tipset 1 timme innan kickoff
+  // Lås tipset 1 timme innan kickoff eller om matchen är avslutad
   const lockTime = new Date(match.kickoff.getTime() - 60 * 60 * 1000);
-  if (new Date() > lockTime) {
+  if (match.isCompleted || new Date() > lockTime) {
     throw new Error(
-      'Tipset är låst. Du måste spara ditt tips senast 1 timme innan matchstart.'
+      match.isCompleted 
+        ? 'Matchen är redan avslutad.' 
+        : 'Tipset är låst. Du måste spara ditt tips senast 1 timme innan matchstart.'
     );
   }
 
@@ -73,8 +75,8 @@ export async function saveProgressBet(formData: FormData) {
   }
 
   const lockTime = new Date(match.kickoff.getTime() - 60 * 60 * 1000);
-  if (new Date() > lockTime) {
-    throw new Error('Tipset är låst.');
+  if (match.isCompleted || new Date() > lockTime) {
+    throw new Error(match.isCompleted ? 'Matchen är redan avslutad.' : 'Tipset är låst.');
   }
 
   await prisma.matchBet.upsert({

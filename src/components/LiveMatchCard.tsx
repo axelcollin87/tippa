@@ -40,9 +40,12 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
   const betsForAway = matchData.bets.filter(b => b.predictedWinner === matchData.awayTeam);
 
   return (
-    <div className="bg-card border border-green-500/50 rounded-xl shadow-lg shadow-green-500/10 overflow-hidden">
-      {/* Main Card Content */}
-      <div className="p-2 md:p-3 flex items-center justify-between group">
+    <div className="bg-card border border-green-500/50 rounded-xl shadow-lg shadow-green-500/10 overflow-hidden relative">
+      {/* Main Card Content (Clickable) */}
+      <Link 
+        href={`/bets?${matchData.groupName ? `group=${matchData.groupName}` : 'view=knockout'}#match-${matchData.id}`}
+        className="p-2 md:p-3 flex items-center justify-between group hover:bg-green-500/5 transition-colors"
+      >
         <div className="space-y-1 flex-1">
           <div className="flex flex-col gap-1 items-start">
             <div className="flex items-center gap-2">
@@ -59,12 +62,14 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
           </div>
         </div>
 
-        <div className="text-right">
+        <div className="text-right relative z-10">
           <div className="flex items-center justify-end gap-1 mb-1">
             <div className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase">Ditt tips</div>
-            <InfoPopover title="Live Poäng (1X2)">
-              <p>Visar hur många poäng ditt lagda tips kommer generera om matchen slutar just nu.</p>
-            </InfoPopover>
+            <div onClick={(e) => e.preventDefault()}>
+              <InfoPopover title="Live Poäng (1X2)">
+                <p>Visar hur många poäng ditt lagda tips kommer generera om matchen slutar just nu.</p>
+              </InfoPopover>
+            </div>
           </div>
           {matchData.myBet ? (
             <div className="flex flex-col items-end gap-1 md:gap-2">
@@ -93,15 +98,15 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
               )}
             </div>
           ) : (
-            <Link href={`/bets`} className="inline-block text-[9px] md:text-[10px] font-bold text-destructive uppercase italic bg-destructive/10 hover:bg-destructive/20 px-2 py-1 rounded border border-destructive/20 transition-colors">
+            <div className="inline-block text-[9px] md:text-[10px] font-bold text-destructive uppercase italic bg-destructive/10 px-2 py-1 rounded border border-destructive/20 transition-colors">
               Tippa nu
-            </Link>
+            </div>
           )}
         </div>
-      </div>
+      </Link>
 
       {/* Expansion Section */}
-      <div className="border-t border-green-500/20 px-2 md:px-3 py-1.5 md:py-2 bg-secondary/20">
+      <div className="border-t border-green-500/20 px-2 md:px-3 py-1.5 md:py-2 bg-secondary/20 relative z-20">
         <button onClick={() => setIsExpanded(!isExpanded)} className="w-full flex justify-between items-center text-[10px] md:text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
           <span>{isExpanded ? 'Dölj' : 'Visa'} tippfördelning</span>
           <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />

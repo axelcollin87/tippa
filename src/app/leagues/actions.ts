@@ -165,3 +165,35 @@ export async function sendLeagueComment(leagueId: string, content: string) {
 
   revalidatePath(`/leagues/${leagueId}`);
 }
+
+export async function toggleFavoriteLeague(leagueId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error('Not authenticated');
+
+  const membership = await prisma.leagueMember.findUnique({
+    where: {
+      userId_leagueId: {
+        userId: session.user.id,
+        leagueId: leagueId,
+      },
+    },
+  });
+
+  if (!membership) throw new Error('Medlemskap hittades inte');
+
+  await prisma.leagueMember.update({
+    where: {
+      userId_leagueId: {
+        userId: session.user.id,
+        leagueId: leagueId,
+      },
+    },
+    data: {
+      isFavorite: !membership.isFavorite,
+    },
+  });
+
+  revalidatePath('/');
+  revalidatePath('/leagues');
+  return { success: true };
+}

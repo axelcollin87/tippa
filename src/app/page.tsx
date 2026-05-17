@@ -19,6 +19,8 @@ import InfoPopover from '@/components/InfoPopover';
 import DashboardTour from '@/components/DashboardTour';
 import { getPotentialWinningsForSign } from '@/lib/scoring';
 
+import Scoreboard from '@/components/Scoreboard';
+
 export default async function Home() {
   const session = await getServerSession(authOptions);
 
@@ -26,7 +28,7 @@ export default async function Home() {
     redirect('/login');
   }
 
-  const [allMatchesWithBets, userBets, userLeagues, allUsers] =
+  const [allMatchesWithBets, userBets, userLeaguesWithDetails, allUsers] =
     await Promise.all([
       prisma.match.findMany({
         orderBy: { kickoff: 'asc' },
@@ -48,6 +50,11 @@ export default async function Home() {
           members: { some: { userId: session.user.id } },
         },
         include: {
+          members: {
+            include: {
+              user: { select: { id: true, totalScore: true } }
+            }
+          },
           _count: { select: { members: true } },
           comments: {
             take: 1,
@@ -62,28 +69,42 @@ export default async function Home() {
       }),
     ]);
 
-  // Skapa en fiktiv "Global" liga som alltid visas
-  const globalLeague = {
-    id: 'global',
-    name: 'Globala Tabellen',
-    inviteCode: 'GLOBAL',
-    adminId: 'system',
-    _count: { members: allUsers.length },
-    comments: [],
-    isGlobal: true,
-    createdAt: new Date(),
-  };
-
-  const displayLeagues: ((typeof userLeagues)[0] & { isGlobal?: boolean })[] = [
-    globalLeague,
-    ...userLeagues,
-  ];
   const now = new Date();
 
   // Beräkna global ranking
-  const currentUser = allUsers.find((u) => u.id === session.user.id);
+  const currentUserData = allUsers.find((u) => u.id === session.user.id);
   const globalRank = allUsers.findIndex((u) => u.id === session.user.id) + 1;
-  const totalPoints = currentUser?.totalScore || 0;
+  const totalPoints = currentUserData?.totalScore || 0;
+
+  // Formatera data för Scoreboard
+  const scoreboardLeagues = userLeaguesWithDetails.map(league => {
+    const myMembership = league.members.find(m => m.userId === session.user.id);
+    
+    // Beräkna nuvarande rank i denna ligan
+    const sortedMembers = [...league.members].sort((a, b) => b.user.totalScore - a.user.totalScore);
+    const currentRank = sortedMembers.findIndex(m => m.userId === session.user.id) + 1;
+
+    return {
+      id: league.id,
+      name: league.name,
+      currentRank,
+      previousRank: myMembership?.previousRank ?? null,
+      isFavorite: myMembership?.isFavorite ?? false,
+      memberCount: league._count.members,
+      groupName: league.name.startsWith('Grupp ') ? league.name.split(' ')[1] : null
+    };
+  });
+
+  // Lägg till globala ligan i scoreboard
+  scoreboardLeagues.unshift({
+    id: 'global',
+    name: 'Globala Tabellen',
+    currentRank: globalRank,
+    previousRank: null,
+    isFavorite: false,
+    memberCount: allUsers.length,
+    groupName: null
+  });
 
   const upcomingMatches = allMatchesWithBets
     .filter(
@@ -256,9 +277,12 @@ export default async function Home() {
               {upcomingMatches.length > 0 ? (
                 upcomingMatches.map((match) => {
                   const myBet = userBets.find((b) => b.matchId === match.id);
+                  const href = `/bets?${match.groupName ? `group=${match.groupName}` : 'view=knockout'}#match-${match.id}`;
+                  
                   return (
-                    <div
+                    <Link
                       key={match.id}
+                      href={href}
                       className="bg-card border border-border rounded-2xl md:rounded-3xl p-4 md:p-5 flex items-center justify-between group hover:border-primary/50 transition-all hover:shadow-lg"
                     >
                       <div className="space-y-2 md:space-y-3">
@@ -296,15 +320,14 @@ export default async function Home() {
                             </div>
                           </div>
                         ) : (
-                          <Link
-                            href={`/bets`}
-                            className="bg-destructive text-destructive-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform"
+                          <div
+                            className="bg-destructive text-destructive-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest group-hover:scale-105 transition-transform"
                           >
                             Tippa
-                          </Link>
+                          </div>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })
               ) : (
@@ -318,49 +341,40 @@ export default async function Home() {
 
         {/* RIGHT: LEAGUES & SOCIAL */}
         <div className="space-y-8 md:space-y-10">
+          <Scoreboard leagues={scoreboardLeagues} />
+
           <div className="space-y-4 md:space-y-6">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-center justify-between px-2 pt-4 border-t border-border/50">
               <div className="flex items-center gap-2 md:gap-3">
                 <Users className="text-primary w-6 h-6 md:w-7 md:h-7" />
                 <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">
-                  Mina Ligor
+                  Ligadetaljer
                 </h2>
               </div>
-              <Link
-                href="/leagues"
-                className="text-[10px] font-black text-primary uppercase hover:underline tracking-widest"
-              >
-                Hantera &rarr;
-              </Link>
             </div>
 
             <div className="grid gap-3 md:gap-4">
-              {displayLeagues.length > 0 ? (
-                displayLeagues.map((league) => (
+              {userLeaguesWithDetails.length > 0 ? (
+                userLeaguesWithDetails.map((league) => (
                   <Link
                     key={league.id}
                     href={`/leagues/${league.id}`}
-                    className={`bg-card border ${league.isGlobal ? 'border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.1)]' : 'border-border'} rounded-2xl md:rounded-[2rem] p-4 md:p-6 hover:border-primary/50 transition-all hover:shadow-xl group relative overflow-hidden`}
+                    className="bg-card border border-border rounded-2xl md:rounded-[2rem] p-4 md:p-6 hover:border-primary/50 transition-all group"
                   >
-                    <div className="relative z-10 space-y-3 md:space-y-4">
+                    <div className="space-y-3">
                       <div className="flex justify-between items-start">
-                        <h3 className="text-lg md:text-xl font-black uppercase tracking-tight group-hover:text-primary transition-colors flex items-center gap-2">
-                          {league.isGlobal && (
-                            <span className="text-primary text-xl md:text-2xl">🌍</span>
-                          )}
+                        <h3 className="text-sm font-black uppercase tracking-tight group-hover:text-primary transition-colors">
                           {league.name}
                         </h3>
-                        <span className="text-[9px] md:text-[10px] font-black bg-primary/10 text-primary px-2 py-1 rounded uppercase">
+                        <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded uppercase">
                           {league._count.members} pers
                         </span>
                       </div>
 
-                      {!league.isGlobal && league.comments[0] && (
+                      {league.comments[0] && (
                         <div className="bg-secondary/30 p-2 md:p-3 rounded-xl md:rounded-2xl flex items-start gap-2 md:gap-3">
-                          <MessageSquare
-                            className="text-muted-foreground mt-1 shrink-0 w-3 h-3 md:w-3.5 md:h-3.5"
-                          />
-                          <div className="text-[11px] md:text-xs italic line-clamp-2">
+                          <MessageSquare className="text-muted-foreground mt-1 shrink-0 w-3 h-3" />
+                          <div className="text-[10px] md:text-[11px] italic line-clamp-1">
                             <span className="font-bold not-italic text-foreground">
                               {league.comments[0].user.name}:{' '}
                             </span>
@@ -368,28 +382,14 @@ export default async function Home() {
                           </div>
                         </div>
                       )}
-
-                      <div className="flex items-center gap-2 text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] pt-1 md:pt-2">
-                        {league.isGlobal
-                          ? 'Se tabellen'
-                          : 'Gå till rummet'}{' '}
-                        <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                      </div>
                     </div>
                   </Link>
                 ))
               ) : (
-                <div className="bg-card border border-dashed border-border rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-center space-y-3 md:space-y-4">
-                  <p className="text-xs md:text-sm text-muted-foreground font-medium leading-relaxed">
-                    Du är inte med i några ligor än. Det är mycket roligare att
-                    tippa tillsammans!
+                <div className="bg-card border border-dashed border-border rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-center">
+                  <p className="text-xs text-muted-foreground font-medium italic">
+                    Gå med i en liga för att se detaljer här.
                   </p>
-                  <Link
-                    href="/leagues"
-                    className="inline-block bg-secondary text-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-secondary/80 transition-colors"
-                  >
-                    Skapa eller Gå med
-                  </Link>
                 </div>
               )}
             </div>

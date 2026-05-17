@@ -346,8 +346,11 @@ export default async function AdminPage(props: { searchParams: Promise<{ tab?: s
                         </div>
                         
                         {match.stage !== "Group" && (
-                          <div className="flex flex-col items-center gap-1 w-full">
-                            <span className="text-[9px] font-black text-primary uppercase">Avancemang</span>
+                          <div className="flex flex-col items-center gap-1 w-full mt-2">
+                            <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                              Fyll i resultat efter ordinarie/förlängning (ej ev. straffar)
+                            </span>
+                            <span className="text-[9px] font-black text-primary uppercase mt-1">Går vidare (inkl ev straffar)</span>
                             <select 
                               name="actualWinner" 
                               defaultValue={match.actualWinner ?? ""}

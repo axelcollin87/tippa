@@ -8,7 +8,7 @@ import GroupRanking from '@/components/GroupRanking';
 import Countdown from '@/components/Countdown';
 import InfoPopover from '@/components/InfoPopover';
 import { Lock, Info } from 'lucide-react';
-import { STAGE_TRANSLATIONS } from '@/lib/teams';
+import { STAGE_TRANSLATIONS, TEAM_TRANSLATIONS } from '@/lib/teams';
 import TeamBadge from '@/components/TeamBadge';
 import MatchCard from '@/components/MatchCard';
 import CrystalBallQuestion from './CrystalBallQuestion';
@@ -76,6 +76,21 @@ export default async function BetsPage(props: {
       ? null
       : searchParams.group || groupNames[0] || 'A';
 
+  // Extrahera alla unika lag för Topp 3-val, översätt och filtrera bort placeholders
+  const allTeams = Array.from(new Set(allMatches.flatMap(m => [m.homeTeam, m.awayTeam])))
+    .map(englishName => {
+      const info = STAGE_TRANSLATIONS[englishName] ? null : TEAM_TRANSLATIONS[englishName];
+      if (!info) return null;
+      return { english: englishName, swedish: info.name };
+    })
+    .filter((t): t is { english: string, swedish: string } => 
+      t !== null && 
+      !['TBD', '1A', '2A', '1B', '2B', '1C', '2C', '1D', '2D', '1E', '2E', '1F', '2F', '1G', '2G', '1H', '2H', '1I', '2I', '1J', '2J', '1K', '2K', '1L', '2L'].includes(t.english) && 
+      !t.english.startsWith('W') && 
+      !t.english.startsWith('L')
+    )
+    .sort((a, b) => a.swedish.localeCompare(b.swedish, 'sv'));
+
   // Kontrollera om hela gruppspelet är färdigspelat
   const groupMatchesForLock = allMatches.filter(
     (m) => m.groupName && m.groupName !== 'TBD'
@@ -138,6 +153,19 @@ export default async function BetsPage(props: {
         </div>
 
         <div className="flex flex-wrap gap-1.5 md:gap-2 pb-2 mt-2 md:mt-4 items-center">
+          <Link
+            href={`/bets?view=crystalball`}
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
+              isCrystalBallView
+                ? 'bg-primary text-primary-foreground scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
+                : 'bg-card text-muted-foreground hover:bg-secondary border-border'
+            }`}
+          >
+            Topp 3 🏆
+          </Link>
+
+          <div className="w-px h-6 bg-border mx-1 md:mx-2"></div>
+
           {groupNames.map((g) => {
             const status = groupStatus[g];
             let statusBorder = 'border-border';
@@ -156,7 +184,7 @@ export default async function BetsPage(props: {
                 key={g}
                 href={`/bets?group=${g}`}
                 className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${statusBorder} ${
-                  activeGroup === g && !isCrystalBallView
+                  activeGroup === g && !isCrystalBallView && !isKnockoutView
                     ? 'bg-primary/80 text-background scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
                     : 'bg-card text-muted-foreground hover:bg-secondary'
                 }`}
@@ -180,38 +208,26 @@ export default async function BetsPage(props: {
               SLUTSPEL
             </Link>
           )}
-
-          <Link
-            href={`/bets?view=crystalball`}
-            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
-              isCrystalBallView
-                ? 'bg-[url("https://www.transparenttextures.com/patterns/stardust.png")] bg-purple-500/20 text-purple-400 scale-105 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
-                : 'bg-card text-muted-foreground hover:bg-secondary border-border'
-            }`}
-          >
-            🔮
-          </Link>
         </div>
       </div>
 
       {isCrystalBallView ? (
         <section className="space-y-4 md:space-y-6">
-          <div>
-            <h1 className="text-2xl md:text-4xl font-black text-purple-400 uppercase tracking-widest flex items-center gap-3">
-              <span>🔮</span> KRISTALLKULAN
+          <div className="bg-primary/5 p-6 rounded-3xl border border-primary/20">
+            <h1 className="text-2xl md:text-4xl font-black text-primary uppercase tracking-widest flex items-center gap-3">
+              <span>🏆</span> TOPP 3 I VM
             </h1>
             <p className="text-muted-foreground mt-2 text-xs md:text-sm max-w-2xl">
-              Långtidsspel som avgörs efter att hela turneringen är spelad.
-              Måste tippas innan VM startar!
+              Vem tror du kniper medaljerna? Dessa val måste göras innan första matchen i VM blåses igång.
             </p>
           </div>
 
           {crystalQuestions.length > 0 ? (
-            <div className="grid gap-3 md:gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:gap-6 md:grid-cols-3">
               {crystalQuestions.map((q) => {
                 const bet = crystalBets.find((b) => b.questionId === q.id);
                 return (
-                  <CrystalBallQuestion key={q.id} question={q} userBet={bet} />
+                  <CrystalBallQuestion key={q.id} question={q} userBet={bet} allTeams={allTeams} />
                 );
               })}
             </div>
@@ -235,11 +251,11 @@ export default async function BetsPage(props: {
                   Tabell
                 </h2>
                 <span className="text-[7px] md:text-[8px] font-black bg-primary/20 text-primary px-2 py-1 rounded">
-                  50P PER RÄTT
+                  100P PER RÄTT
                 </span>
                 <InfoPopover title="Grupptippning">
                   <p>
-                    Du får <b>50 poäng</b> för varje lag du sätter på exakt rätt
+                    Du får <b>100 poäng</b> för varje lag du sätter på exakt rätt
                     position (1:a till 4:e plats) i gruppen efter att sista
                     gruppspelsmatchen är spelad.
                   </p>
@@ -283,11 +299,12 @@ export default async function BetsPage(props: {
             </div>
             <div className="grid gap-3 md:gap-4">
               {activeMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  userBet={match.bets[0]}
-                />
+                <div key={match.id} id={`match-${match.id}`} className="scroll-mt-24">
+                  <MatchCard
+                    match={match}
+                    userBet={match.bets[0]}
+                  />
+                </div>
               ))}
             </div>
           </section>
@@ -311,23 +328,66 @@ export default async function BetsPage(props: {
             </div>
           ) : (
             <div className="grid gap-3 md:gap-4">
-              {Object.keys(knockoutStages).map((stage) => (
-                <div
-                  key={stage}
-                  className="space-y-3 md:space-y-4 mb-6 md:mb-8"
-                >
-                  <h3 className="text-xl md:text-2xl font-black text-foreground border-b border-border pb-1 md:pb-2 uppercase">
-                    {STAGE_TRANSLATIONS[stage] || stage}
-                  </h3>
-                  {knockoutStages[stage].map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      userBet={match.bets[0]}
-                    />
-                  ))}
-                </div>
-              ))}
+              {Object.keys(knockoutStages).map((stage) => {
+                const stageOrder = [
+                  'Round of 32',
+                  'Round of 16',
+                  'Quarter-final',
+                  'Semi-final',
+                  'Final',
+                  '3rd Place',
+                ];
+                const stageIndex = stageOrder.indexOf(stage);
+                
+                let isStageLocked = false;
+                let prevStageName = '';
+                
+                if (stage === 'Final' || stage === '3rd Place') {
+                  const prevStageMatches = knockoutStages['Semi-final'] || [];
+                  isStageLocked = prevStageMatches.length > 0 && !prevStageMatches.every((m) => m.isCompleted);
+                  prevStageName = 'Semi-final';
+                } else if (stageIndex > 0) {
+                  const prevStage = stageOrder[stageIndex - 1];
+                  const prevStageMatches = knockoutStages[prevStage] || [];
+                  isStageLocked = prevStageMatches.length > 0 && !prevStageMatches.every((m) => m.isCompleted);
+                  prevStageName = prevStage;
+                }
+
+                return (
+                  <div
+                    key={stage}
+                    className="space-y-3 md:space-y-4 mb-6 md:mb-8"
+                  >
+                    <div className="flex items-center justify-between border-b border-border pb-1 md:pb-2">
+                      <h3 className="text-xl md:text-2xl font-black text-foreground uppercase">
+                        {STAGE_TRANSLATIONS[stage] || stage}
+                      </h3>
+                      {isStageLocked && (
+                        <span className="text-[10px] md:text-xs font-black text-muted-foreground flex items-center gap-1">
+                          <Lock size={12} /> Öppnar efter {STAGE_TRANSLATIONS[prevStageName] || prevStageName}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {isStageLocked ? (
+                      <div className="text-center py-6 md:py-8 bg-secondary/20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl flex flex-col items-center gap-2">
+                        <Lock className="opacity-40 w-5 h-5" />
+                        <p className="font-bold text-xs md:text-sm">
+                          Låst tills föregående runda är färdigspelad.
+                        </p>
+                      </div>
+                    ) : (
+                      knockoutStages[stage].map((match) => (
+                        <MatchCard
+                          key={match.id}
+                          match={match}
+                          userBet={match.bets[0]}
+                        />
+                      ))
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

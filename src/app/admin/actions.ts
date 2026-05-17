@@ -31,22 +31,23 @@ export async function clearAllBets() {
 export async function seedCrystalBallQuestions() {
   await requireAdmin();
   
-  const existing = await prisma.sidebetQuestion.count();
-  if (existing > 0) return;
+  // Rensa ALLA gamla frågor först för att vara säker på att vi bara har de 3 nya
+  await prisma.sidebetQuestion.deleteMany();
 
-  // Sätt låsningstiden till VM-premiären (exempel: 11 juni 2026 kl 20:00)
-  // Detta bör egentligen dynamiskt vara den första matchens kickoff
+  // Hitta första matchen och sätt låsningstiden till 1h innan avspark
   const firstMatch = await prisma.match.findFirst({ orderBy: { kickoff: 'asc' } });
-  const lockedAt = firstMatch ? firstMatch.kickoff : new Date('2026-06-11T20:00:00Z');
+  
+  // Standard-datum om inga matcher finns laddade (t.ex. 11 juni 2026 kl 19:00 UTC)
+  let lockedAt = new Date('2026-06-11T19:00:00Z');
+  
+  if (firstMatch) {
+    lockedAt = new Date(firstMatch.kickoff.getTime() - 60 * 60 * 1000);
+  }
 
   const questions = [
-    { question: 'Vinnare av Fotbolls-VM', points: 150, lockedAt },
-    { question: 'Tvåa i Fotbolls-VM (Silver)', points: 100, lockedAt },
-    { question: 'Trea i Fotbolls-VM (Brons)', points: 75, lockedAt },
-    { question: 'Skyttekung (Spelare)', points: 150, lockedAt },
-    { question: 'Målmaskinen (Laget som gör flest mål i gruppspelet)', points: 75, lockedAt },
-    { question: 'Kortleken (Lag som får flest röda kort)', points: 50, lockedAt },
-    { question: 'Största floppen (Lag som åker ur gruppspelet med 0 poäng)', points: 50, lockedAt },
+    { question: 'Vinnare av VM (Guld)', points: 1000, lockedAt },
+    { question: 'Tvåa i VM (Silver)', points: 750, lockedAt },
+    { question: 'Trea i VM (Brons)', points: 500, lockedAt },
   ];
 
   await prisma.sidebetQuestion.createMany({ data: questions });

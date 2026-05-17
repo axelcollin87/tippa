@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { registerUser } from './actions';
@@ -19,6 +19,17 @@ function LoginContent() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Läs in felmeddelanden från OAuth (t.ex. "Väntar på godkännande")
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const messageParam = searchParams.get('message');
+    if (errorParam === 'AccessDenied' && messageParam) {
+      setError(messageParam);
+      // Rensa parametern ur URL:en så den inte är kvar om de laddar om
+      router.replace('/login');
+    }
+  }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

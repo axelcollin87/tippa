@@ -62,13 +62,12 @@ export const authOptions: NextAuthOptions = {
               isAdmin: false,
             }
           });
-          // Kasta inte error här, vi vill att de ska se inloggningssidan med ett meddelande senare
-          // Men för Google vill vi visa att de nu väntar på godkännande
-          throw new Error("Ditt Google-konto har registrerats men väntar på att bli godkänt av en admin.");
+          // Returnera en redirect URL till login-sidan med ett felmeddelande i querystringen istället för att kasta ett error
+          return "/login?error=AccessDenied&message=Ditt+Google-konto+har+registrerats+men+väntar+på+att+bli+godkänt+av+en+admin.";
         }
 
         if (!existingUser.isApproved) {
-          throw new Error("Ditt konto väntar på att bli godkänt av en admin.");
+          return "/login?error=AccessDenied&message=Ditt+konto+väntar+på+att+bli+godkänt+av+en+admin.";
         }
 
         // Koppla Google-ID:t till NextAuth-token genom att sätta ID:t

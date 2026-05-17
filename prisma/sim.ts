@@ -6,10 +6,13 @@ const prisma = new PrismaClient();
 async function simGroups() {
   console.log('Simulerar alla gruppspelsmatcher (Hemma vinner 2-1)...');
   
-  // Hitta alla matcher som tillhör en specifik grupp (ignorera "TBD")
+  // Hitta alla matcher som tillhör en specifik grupp (ignorera "TBD" och null)
   const groupMatches = await prisma.match.findMany({
     where: { 
-      groupName: { not: null, not: 'TBD' } 
+      AND: [
+        { groupName: { not: null } },
+        { groupName: { not: 'TBD' } }
+      ]
     }
   });
 

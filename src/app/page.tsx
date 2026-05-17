@@ -52,8 +52,8 @@ export default async function Home() {
         include: {
           members: {
             include: {
-              user: { select: { id: true, totalScore: true } }
-            }
+              user: { select: { id: true, totalScore: true } },
+            },
           },
           _count: { select: { members: true } },
           comments: {
@@ -77,12 +77,17 @@ export default async function Home() {
   const totalPoints = currentUserData?.totalScore || 0;
 
   // Formatera data för Scoreboard
-  const scoreboardLeagues = userLeaguesWithDetails.map(league => {
-    const myMembership = league.members.find(m => m.userId === session.user.id);
-    
+  const scoreboardLeagues = userLeaguesWithDetails.map((league) => {
+    const myMembership = league.members.find(
+      (m) => m.userId === session.user.id
+    );
+
     // Beräkna nuvarande rank i denna ligan
-    const sortedMembers = [...league.members].sort((a, b) => b.user.totalScore - a.user.totalScore);
-    const currentRank = sortedMembers.findIndex(m => m.userId === session.user.id) + 1;
+    const sortedMembers = [...league.members].sort(
+      (a, b) => b.user.totalScore - a.user.totalScore
+    );
+    const currentRank =
+      sortedMembers.findIndex((m) => m.userId === session.user.id) + 1;
 
     return {
       id: league.id,
@@ -91,7 +96,9 @@ export default async function Home() {
       previousRank: myMembership?.previousRank ?? null,
       isFavorite: myMembership?.isFavorite ?? false,
       memberCount: league._count.members,
-      groupName: league.name.startsWith('Grupp ') ? league.name.split(' ')[1] : null
+      groupName: league.name.startsWith('Grupp ')
+        ? league.name.split(' ')[1]
+        : null,
     };
   });
 
@@ -103,7 +110,7 @@ export default async function Home() {
     previousRank: null,
     isFavorite: false,
     memberCount: allUsers.length,
-    groupName: null
+    groupName: null,
   });
 
   const upcomingMatches = allMatchesWithBets
@@ -166,7 +173,10 @@ export default async function Home() {
       .sort((a, b) => a.kickoff.getTime() - b.kickoff.getTime())[0];
 
     if (firstUpcomingKnockout) {
-      if (firstUpcomingKnockout.stage === '3rd Place' || firstUpcomingKnockout.stage === 'Final') {
+      if (
+        firstUpcomingKnockout.stage === '3rd Place' ||
+        firstUpcomingKnockout.stage === 'Final'
+      ) {
         return m.stage === '3rd Place' || m.stage === 'Final';
       }
       return m.stage === firstUpcomingKnockout.stage;
@@ -182,50 +192,55 @@ export default async function Home() {
       {/* HERO SECTION */}
       <div
         id="tour-welcome"
-        className="relative bg-card rounded-3xl sm:rounded-[2.5rem] border border-border overflow-hidden shadow-2xl"
+        className="relative bg-card rounded-2xl sm:rounded-[2.5rem] border border-border overflow-hidden shadow-2xl"
       >
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -mr-40 -mt-40 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none"></div>
 
-        <div className="relative z-10 p-5 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-10">
-          <div className="flex-1 space-y-3 md:space-y-4 text-center md:text-left">
-            <h1 className="text-2xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
+        <div className="relative z-10 p-4 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-10">
+          <div className="flex-1 space-y-2 md:space-y-4 text-center md:text-left">
+            <h1 className="text-xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
               HEJ, {session.user.name?.split(' ')[0].toUpperCase()}! 👋
             </h1>
-            <p className="text-muted-foreground text-sm md:text-md font-medium max-w-md">
+            <p className="text-foreground/90 text-xs md:text-base font-medium max-w-md mx-auto md:mx-0">
               Välkommen tillbaka till Tippwits. Just nu ligger du på plats{' '}
-              <b>#{globalRank}</b> i den globala ligan.
+              <b className="text-primary">#{globalRank}</b> i den globala ligan.
             </p>
 
             {missingBetsCount > 0 ? (
-              <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest animate-pulse">
-                <AlertCircle size={12} />
-                {missingBetsCount} otippade kvar!
-              </div>
+              <Link
+                href="/bets"
+                className="text-[10px] font-black uppercase hover:underline tracking-widest"
+              >
+                <div className="inline-flex items-center gap-1.5 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                  <AlertCircle size={12} />
+                  {missingBetsCount} otippade kvar!
+                </div>
+              </Link>
             ) : (
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest">
+              <div className="inline-flex items-center gap-1.5 bg-primary/20 text-primary px-3 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest border border-primary/30">
                 <Zap size={12} />
                 Alla tips är inne!
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 w-full md:w-auto">
-            <div className="bg-secondary/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl md:rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[120px] md:min-w-[140px]">
-              <Trophy className="text-yellow-500 mb-1 md:mb-2" size={20} />
-              <span className="text-2xl md:text-3xl font-black text-foreground">
+          <div className="grid grid-cols-2 gap-2 w-full md:w-auto">
+            <div className="bg-secondary/50 backdrop-blur-sm p-3 md:p-6 rounded-xl md:rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[100px] md:min-w-[140px]">
+              <Trophy className="text-yellow-500 mb-0.5 md:mb-2 w-4 h-4 md:w-5 md:h-5" />
+              <span className="text-xl md:text-3xl font-black text-foreground">
                 {totalPoints}
               </span>
-              <span className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+              <span className="text-[8px] md:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                 Poäng
               </span>
             </div>
-            <div className="bg-secondary/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl md:rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[120px] md:min-w-[140px]">
-              <Zap className="text-primary mb-1 md:mb-2" size={20} />
-              <span className="text-2xl md:text-3xl font-black text-foreground">
+            <div className="bg-secondary/50 backdrop-blur-sm p-3 md:p-6 rounded-xl md:rounded-3xl border border-border/50 text-center flex flex-col items-center justify-center min-w-[100px] md:min-w-[140px]">
+              <Zap className="text-primary mb-0.5 md:mb-2 w-4 h-4 md:w-5 md:h-5" />
+              <span className="text-xl md:text-3xl font-black text-foreground">
                 #{globalRank}
               </span>
-              <span className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+              <span className="text-[8px] md:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                 Global Rank
               </span>
             </div>
@@ -273,7 +288,7 @@ export default async function Home() {
                 href="/bets"
                 className="text-[10px] font-black text-primary uppercase hover:underline tracking-widest"
               >
-                Visa alla &rarr;
+                Till mina tips &rarr;
               </Link>
             </div>
 
@@ -282,7 +297,7 @@ export default async function Home() {
                 upcomingMatches.map((match) => {
                   const myBet = userBets.find((b) => b.matchId === match.id);
                   const href = `/bets?${match.groupName ? `group=${match.groupName}` : 'view=knockout'}#match-${match.id}`;
-                  
+
                   return (
                     <Link
                       key={match.id}
@@ -324,9 +339,7 @@ export default async function Home() {
                             </div>
                           </div>
                         ) : (
-                          <div
-                            className="bg-destructive text-destructive-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest group-hover:scale-105 transition-transform"
-                          >
+                          <div className="bg-destructive text-destructive-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest group-hover:scale-105 transition-transform">
                             Tippa
                           </div>
                         )}

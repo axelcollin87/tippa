@@ -14,7 +14,7 @@ model User {
   name            String
   password        String? // Hashed password, optional for OAuth users
   isAdmin         Boolean             @default(false)
-  isApproved      Boolean             @default(false) // Måste godkännas av Admin
+  isApproved      Boolean             @default(true) // Ändrad till true för automatisk tillgång
   matchBets       MatchBet[]
   groupPlacements GroupPlacementBet[]
   totalScore      Int                 @default(0)

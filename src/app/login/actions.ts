@@ -7,6 +7,13 @@ export async function registerUser(formData: FormData) {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const honeypot = formData.get("website_url") as string; // Honeypot field
+
+  // Bot-skydd: Om honeypot-fältet är ifyllt är det antagligen en bot
+  if (honeypot) {
+    // Låtsas som att det gick bra för att inte ge botar ledtrådar
+    return { success: true, message: "Konto skapat. Loggar in..." };
+  }
 
   if (!name || !email || !password) {
     return { error: "Alla fält måste fyllas i." };
@@ -26,7 +33,6 @@ export async function registerUser(formData: FormData) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Om det är den allra första användaren i databasen, gör dem till Admin OCH godkänn dem direkt!
   const userCount = await prisma.user.count();
   const isFirstUser = userCount === 0;
 
@@ -36,13 +42,9 @@ export async function registerUser(formData: FormData) {
       email,
       password: hashedPassword,
       isAdmin: isFirstUser,
-      isApproved: isFirstUser, 
+      isApproved: true, // Alla godkänns direkt nu
     }
   });
 
-  if (isFirstUser) {
-    return { success: true, message: "Konto skapat! Eftersom du är först blev du automatiskt Admin. Du kan logga in direkt." };
-  }
-
-  return { success: true, message: "Konto skapat! Du måste vänta på att en Admin godkänner ditt konto innan du kan logga in." };
+  return { success: true, message: "Konto skapat! Loggar in dig..." };
 }

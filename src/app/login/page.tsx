@@ -95,26 +95,38 @@ function LoginContent() {
         <div className="bg-card border border-border py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {!isLoginMode && (
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-foreground"
-                >
-                  Namn
-                </label>
-                <div className="mt-2">
+              <>
+                <div className="hidden" aria-hidden="true">
+                  <label htmlFor="website_url">Website</label>
                   <input
-                    id="name"
-                    name="name"
                     type="text"
-                    required={!isLoginMode}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="appearance-none block w-full px-3 py-3 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
-                    placeholder="Namn/Användarnamn"
+                    id="website_url"
+                    name="website_url"
+                    tabIndex={-1}
+                    autoComplete="off"
                   />
                 </div>
-              </div>
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Namn
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      required={!isLoginMode}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="appearance-none block w-full px-3 py-3 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
+                      placeholder="Namn/Användarnamn"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div>

@@ -35,10 +35,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Fel e-postadress eller lösenord.");
         }
 
-        if (!user.isApproved) {
-          throw new Error("Ditt konto väntar på att bli godkänt av en admin.");
-        }
-
         return { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin };
       }
     })
@@ -53,21 +49,18 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!existingUser) {
-          // Skapa ny användare men kräver fortfarande godkännande
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
               email: user.email,
               name: user.name || "Namnlös",
-              isApproved: false,
+              isApproved: true,
               isAdmin: false,
             }
           });
-          // Returnera en redirect URL till login-sidan med ett felmeddelande i querystringen istället för att kasta ett error
-          return "/login?error=AccessDenied&message=Ditt+Google-konto+har+registrerats+men+väntar+på+att+bli+godkänt+av+en+admin.";
-        }
-
-        if (!existingUser.isApproved) {
-          return "/login?error=AccessDenied&message=Ditt+konto+väntar+på+att+bli+godkänt+av+en+admin.";
+          
+          user.id = newUser.id;
+          (user as any).isAdmin = newUser.isAdmin;
+          return true;
         }
 
         // Koppla Google-ID:t till NextAuth-token genom att sätta ID:t
@@ -90,8 +83,8 @@ export const authOptions: NextAuthOptions = {
           where: { id: token.id as string }
         });
 
-        if (!dbUser || !dbUser.isApproved) {
-          return { ...session, error: "UserNotFoundOrNotApproved" } as any;
+        if (!dbUser) {
+          return { ...session, error: "UserNotFound" } as any;
         }
 
         session.user.id = token.id as string;

@@ -16,7 +16,11 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-export default function Navbar() {
+export default function Navbar({
+  missingBetsCount = 0,
+}: {
+  missingBetsCount?: number;
+}) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -76,16 +80,23 @@ export default function Navbar() {
                         ? 'tour-nav-leagues'
                         : undefined
                   }
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all hover:bg-secondary group ${
+                  className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all hover:bg-secondary group ${
                     isActive
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Icon
-                    size={18}
-                    className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`}
-                  />
+                  <div className="relative flex items-center justify-center">
+                    <Icon
+                      size={18}
+                      className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`}
+                    />
+                    {link.name === 'Mina Tips' && missingBetsCount > 0 && (
+                      <span className="absolute -top-3.5 -right-2 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] font-black rounded-full flex items-center justify-center animate-pulse border border-background">
+                        {missingBetsCount > 9 ? '9+' : missingBetsCount}
+                      </span>
+                    )}
+                  </div>
                   <span>{link.name}</span>
                 </Link>
               );
@@ -139,7 +150,14 @@ export default function Navbar() {
                       : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                   }`}
                 >
-                  <Icon size={20} />
+                  <div className="relative">
+                    <Icon size={20} />
+                    {link.name === 'Mina Tips' && missingBetsCount > 0 && (
+                      <span className="absolute -top-2 -right-2 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
+                        {missingBetsCount > 9 ? '9+' : missingBetsCount}
+                      </span>
+                    )}
+                  </div>
                   {link.name}
                 </Link>
               );

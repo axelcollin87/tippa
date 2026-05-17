@@ -8,7 +8,7 @@ export default function DashboardTour() {
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('hasSeenDashboardTour');
 
-    if (!hasSeenTour) {
+    if (hasSeenTour) {
       setTimeout(() => {
         const isMobile = window.innerWidth < 768;
 

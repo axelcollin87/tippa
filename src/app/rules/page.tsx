@@ -97,13 +97,13 @@ export default function RulesPage() {
             behålla spänningen hela vägen.
           </p>
         </div>
-        <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { stage: 'Gruppspel', mult: 'x1' },
-            { stage: 'Åttondel', mult: 'x2' },
-            { stage: 'Kvartsfinal', mult: 'x3' },
-            { stage: 'Semifinal', mult: 'x4' },
-            { stage: 'Final / 3:e', mult: 'x5' },
+            { stage: '16/8-del', mult: 'x1.5' },
+            { stage: 'Kvartsfinal', mult: 'x2.0' },
+            { stage: 'Semifinal', mult: 'x2.5' },
+            { stage: 'Final / Brons', mult: 'x3.0' },
           ].map((item) => (
             <div
               key={item.stage}
@@ -138,7 +138,11 @@ export default function RulesPage() {
               },
               {
                 title: 'Grupplacering',
-                desc: 'Tippa 1:a till 4:e plats i varje grupp. Varje rätt placerat lag ger 50p fast poäng.',
+                desc: 'Tippa 1:a till 4:e plats i varje grupp. Varje lag du sätter på exakt rätt position ger dig hela 100 poäng. En helt korrekt grupp ger alltså upp till 400 poäng!',
+              },
+              {
+                title: 'Topp 3',
+                desc: 'Tippa hela mästerskapets Topp 3 innan turneringen drar igång. 500/750/1000p respektive.',
               },
               {
                 title: 'Deadline',
@@ -181,7 +185,7 @@ export default function RulesPage() {
                 desc: 'Inverse Popularity gäller för båda tipsen oberoende av varandra.',
               },
               {
-                title: 'Dynamic Choice',
+                title: 'Fristående rundor',
                 desc: 'Du väljer fritt vilka lag du tror går vidare, oavsett vad du tippade i förra rundan.',
               },
             ].map((item) => (

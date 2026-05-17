@@ -82,7 +82,7 @@ function LoginContent() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-card border border-border py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit} method="POST">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {!isLoginMode && (
               <div>
                 <label
@@ -178,23 +178,63 @@ function LoginContent() {
                     : 'Registrera dig'}
               </button>
             </div>
+          </form>
 
-            <div className="text-center mt-4">
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-sm font-medium leading-6">
+                <span className="bg-card px-4 text-muted-foreground uppercase tracking-widest text-[10px]">
+                  Eller fortsätt med
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
               <button
-                type="button"
-                onClick={() => {
-                  setIsLoginMode(!isLoginMode);
-                  setError(null);
-                  setSuccessMsg(null);
-                }}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => signIn('google', { callbackUrl: '/' })}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-bold border border-border rounded-lg shadow-sm bg-background hover:bg-secondary/50 transition-colors"
               >
-                {isLoginMode
-                  ? 'Inget konto? Registrera dig här.'
-                  : 'Har du redan ett konto? Logga in.'}
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.18 1-.78 1.85-1.63 2.42v2.85h2.64c1.55-1.42 2.43-3.5 2.43-5.28z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-2.64-2.05c-.73.49-1.66.78-2.64.78-2.03 0-3.75-1.37-4.36-3.22H2.02v2.16C3.84 21.39 7.72 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M7.64 15.85c-.15-.45-.24-.93-.24-1.42s.09-.97.24-1.42V10.85H2.02c-.51 1.05-.8 2.21-.8 3.4s.29 2.35.8 3.4l5.62-4.4z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.72 1 3.84 2.61 2.02 5.77L7.64 10.1c.61-1.85 2.33-3.22 4.36-3.22z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                Google
               </button>
             </div>
-          </form>
+          </div>
+
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLoginMode(!isLoginMode);
+                setError(null);
+                setSuccessMsg(null);
+              }}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isLoginMode
+                ? 'Inget konto? Registrera dig här.'
+                : 'Har du redan ett konto? Logga in.'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

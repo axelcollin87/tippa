@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
-import Navbar from "@/components/Navbar";
+import NavbarServer from "@/components/NavbarServer";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -26,7 +26,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <AuthProvider>
-          <Navbar />
+          <NavbarServer />
           <main className="flex-1">
             {children}
           </main>

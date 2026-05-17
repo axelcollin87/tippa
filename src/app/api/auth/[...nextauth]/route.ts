@@ -1,10 +1,15 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: "Konto",
       credentials: {
@@ -20,7 +25,7 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email }
         });
 
-        if (!user) {
+        if (!user || !user.password) {
           throw new Error("Fel e-postadress eller lösenord.");
         }
 
@@ -39,6 +44,40 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        if (!user.email) return false;
+
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email }
+        });
+
+        if (!existingUser) {
+          // Skapa ny användare men kräver fortfarande godkännande
+          await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name || "Namnlös",
+              isApproved: false,
+              isAdmin: false,
+            }
+          });
+          // Kasta inte error här, vi vill att de ska se inloggningssidan med ett meddelande senare
+          // Men för Google vill vi visa att de nu väntar på godkännande
+          throw new Error("Ditt Google-konto har registrerats men väntar på att bli godkänt av en admin.");
+        }
+
+        if (!existingUser.isApproved) {
+          throw new Error("Ditt konto väntar på att bli godkänt av en admin.");
+        }
+
+        // Koppla Google-ID:t till NextAuth-token genom att sätta ID:t
+        user.id = existingUser.id;
+        (user as any).isAdmin = existingUser.isAdmin;
+        return true;
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

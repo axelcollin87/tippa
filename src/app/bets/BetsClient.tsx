@@ -27,6 +27,8 @@ type BetsClientProps = {
   groupStatus: Record<string, 'completed' | 'started' | 'empty'>;
   knockoutStages: Record<string, any[]>;
   knockoutTabs: { id: string; label: string; stages: string[] }[];
+  knockoutTabStatus: Record<string, 'completed' | 'started' | 'locked'>;
+  isCrystalBallComplete: boolean;
 };
 
 export default function BetsClient({
@@ -47,10 +49,15 @@ export default function BetsClient({
   groupStatus,
   knockoutStages,
   knockoutTabs,
+  knockoutTabStatus,
+  isCrystalBallComplete,
 }: BetsClientProps) {
   const [view, setView] = useState(initialView);
-  const [activeGroup, setActiveGroup] = useState<string | null>(initialGroup || groupNames[0] || 'A');
-  const [activeKnockoutStageId, setActiveKnockoutStageId] = useState(initialStage);
+  const [activeGroup, setActiveGroup] = useState<string | null>(
+    initialGroup || groupNames[0] || 'A'
+  );
+  const [activeKnockoutStageId, setActiveKnockoutStageId] =
+    useState(initialStage);
 
   const isKnockoutView = view === 'knockout';
   const isCrystalBallView = view === 'crystalball';
@@ -65,7 +72,7 @@ export default function BetsClient({
     url.searchParams.set('view', newView);
     if (group) url.searchParams.set('group', group);
     else url.searchParams.delete('group');
-    
+
     if (stage) url.searchParams.set('stage', stage);
     else url.searchParams.delete('stage');
 
@@ -85,7 +92,9 @@ export default function BetsClient({
         .sort((a, b) => a.rank - b.rank)
     : [];
 
-  const activeKnockoutStages = knockoutTabs.find(t => t.id === activeKnockoutStageId)?.stages || ['Round of 32'];
+  const activeKnockoutStages = knockoutTabs.find(
+    (t) => t.id === activeKnockoutStageId
+  )?.stages || ['Round of 32'];
 
   return (
     <div className="py-6 px-3 sm:py-10 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6 sm:space-y-8">
@@ -105,6 +114,8 @@ export default function BetsClient({
             className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
               isCrystalBallView
                 ? 'bg-primary text-primary-foreground scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
+                : isCrystalBallComplete
+                ? 'bg-card text-muted-foreground hover:bg-secondary border-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]'
                 : 'bg-card text-muted-foreground hover:bg-secondary border-border'
             }`}
           >
@@ -159,19 +170,32 @@ export default function BetsClient({
 
         {isKnockoutView && (
           <div className="flex flex-wrap gap-1.5 md:gap-2 pt-2 items-center">
-            {knockoutTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick('knockout', undefined, tab.id)}
-                className={`px-3 md:px-4 py-1 md:py-1.5 rounded-full font-black text-[8px] md:text-[10px] transition-all uppercase tracking-widest border ${
-                  activeKnockoutStageId === tab.id
-                    ? 'bg-primary/20 text-primary border-primary shadow-[0_0_10px_rgba(var(--primary),0.2)]'
-                    : 'bg-card text-muted-foreground hover:bg-secondary border-border'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            {knockoutTabs.map((tab) => {
+              const status = knockoutTabStatus[tab.id];
+              let statusBorder = 'border-border';
+              if (status === 'completed')
+                statusBorder =
+                  'border-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]';
+              else if (status === 'started')
+                statusBorder =
+                  'border-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.3)]';
+              else
+                statusBorder = 'border-border opacity-50';
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick('knockout', undefined, tab.id)}
+                  className={`px-3 md:px-4 py-1 md:py-1.5 rounded-full font-black text-[8px] md:text-[10px] transition-all uppercase tracking-widest border ${statusBorder} ${
+                    activeKnockoutStageId === tab.id
+                      ? 'bg-primary/20 text-primary border-primary shadow-[0_0_10px_rgba(var(--primary),0.2)] opacity-100'
+                      : 'bg-card text-muted-foreground hover:bg-secondary'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -183,7 +207,8 @@ export default function BetsClient({
               <span>🏆</span> TOPP 3 I VM
             </h1>
             <p className="text-muted-foreground mt-2 text-xs md:text-sm max-w-2xl">
-              Vem tror du kniper medaljerna? Dessa val måste göras innan första matchen i VM blåses igång.
+              Vem tror du kniper medaljerna? Dessa val måste göras innan första
+              matchen i VM blåses igång.
             </p>
           </div>
 
@@ -192,13 +217,18 @@ export default function BetsClient({
               {crystalQuestions.map((q) => {
                 const bet = crystalBets.find((b) => b.questionId === q.id);
                 return (
-                  <CrystalBallQuestion key={q.id} question={q} userBet={bet} allTeams={allTeams} />
+                  <CrystalBallQuestion
+                    key={q.id}
+                    question={q}
+                    userBet={bet}
+                    allTeams={allTeams}
+                  />
                 );
               })}
             </div>
           ) : (
             <div className="text-center py-10 md:py-20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl">
-              Kristallkulan är inte aktiverad ännu.
+              Top 3 är inte aktiverad ännu.
             </div>
           )}
         </section>
@@ -220,8 +250,8 @@ export default function BetsClient({
                 </span>
                 <InfoPopover title="Grupptippning">
                   <p>
-                    Du får <b>100 poäng</b> för varje lag du sätter på exakt rätt
-                    position (1:a till 4:e plats) i gruppen efter att sista
+                    Du får <b>100 poäng</b> för varje lag du sätter på exakt
+                    rätt position (1:a till 4:e plats) i gruppen efter att sista
                     gruppspelsmatchen är spelad.
                   </p>
                 </InfoPopover>
@@ -259,16 +289,17 @@ export default function BetsClient({
                 Matcher
               </h2>
               <span className="text-[9px] md:text-[10px] font-black bg-secondary text-muted-foreground px-2 py-1 rounded">
-                BELÖNAR SKRÄLLAR
+                100p maxpoäng
               </span>
             </div>
             <div className="grid gap-3 md:gap-4">
               {activeMatches.map((match) => (
-                <div key={match.id} id={`match-${match.id}`} className="scroll-mt-24">
-                  <MatchCard
-                    match={match}
-                    userBet={match.bets[0]}
-                  />
+                <div
+                  key={match.id}
+                  id={`match-${match.id}`}
+                  className="scroll-mt-24"
+                >
+                  <MatchCard match={match} userBet={match.bets[0]} />
                 </div>
               ))}
             </div>
@@ -294,67 +325,72 @@ export default function BetsClient({
           ) : (
             <div className="grid gap-3 md:gap-4">
               {Object.keys(knockoutStages)
-                .filter(stage => activeKnockoutStages.includes(stage))
+                .filter((stage) => activeKnockoutStages.includes(stage))
                 .map((stage) => {
-                const stageOrder = [
-                  'Round of 32',
-                  'Round of 16',
-                  'Quarter-final',
-                  'Semi-final',
-                  'Final',
-                  '3rd Place',
-                ];
-                const stageIndex = stageOrder.indexOf(stage);
-                
-                let isStageLocked = false;
-                let prevStageName = '';
-                
-                if (stage === 'Final' || stage === '3rd Place') {
-                  const prevStageMatches = knockoutStages['Semi-final'] || [];
-                  isStageLocked = prevStageMatches.length > 0 && !prevStageMatches.every((m) => m.isCompleted);
-                  prevStageName = 'Semi-final';
-                } else if (stageIndex > 0) {
-                  const prevStage = stageOrder[stageIndex - 1];
-                  const prevStageMatches = knockoutStages[prevStage] || [];
-                  isStageLocked = prevStageMatches.length > 0 && !prevStageMatches.every((m) => m.isCompleted);
-                  prevStageName = prevStage;
-                }
+                  const stageOrder = [
+                    'Round of 32',
+                    'Round of 16',
+                    'Quarter-final',
+                    'Semi-final',
+                    'Final',
+                    '3rd Place',
+                  ];
+                  const stageIndex = stageOrder.indexOf(stage);
 
-                return (
-                  <div
-                    key={stage}
-                    className="space-y-3 md:space-y-4 mb-6 md:mb-8"
-                  >
-                    <div className="flex items-center justify-between border-b border-border pb-1 md:pb-2">
-                      <h3 className="text-xl md:text-2xl font-black text-foreground uppercase">
-                        {STAGE_TRANSLATIONS[stage] || stage}
-                      </h3>
-                      {isStageLocked && (
-                        <span className="text-[10px] md:text-xs font-black text-muted-foreground flex items-center gap-1">
-                          <Lock size={12} /> Öppnar efter {STAGE_TRANSLATIONS[prevStageName] || prevStageName}
-                        </span>
+                  let isStageLocked = false;
+                  let prevStageName = '';
+
+                  if (stage === 'Final' || stage === '3rd Place') {
+                    const prevStageMatches = knockoutStages['Semi-final'] || [];
+                    isStageLocked =
+                      prevStageMatches.length > 0 &&
+                      !prevStageMatches.every((m) => m.isCompleted);
+                    prevStageName = 'Semi-final';
+                  } else if (stageIndex > 0) {
+                    const prevStage = stageOrder[stageIndex - 1];
+                    const prevStageMatches = knockoutStages[prevStage] || [];
+                    isStageLocked =
+                      prevStageMatches.length > 0 &&
+                      !prevStageMatches.every((m) => m.isCompleted);
+                    prevStageName = prevStage;
+                  }
+
+                  return (
+                    <div
+                      key={stage}
+                      className="space-y-3 md:space-y-4 mb-6 md:mb-8"
+                    >
+                      <div className="flex items-center justify-between border-b border-border pb-1 md:pb-2">
+                        <h3 className="text-xl md:text-2xl font-black text-foreground uppercase">
+                          {STAGE_TRANSLATIONS[stage] || stage}
+                        </h3>
+                        {isStageLocked && (
+                          <span className="text-[10px] md:text-xs font-black text-muted-foreground flex items-center gap-1">
+                            <Lock size={12} /> Öppnar efter{' '}
+                            {STAGE_TRANSLATIONS[prevStageName] || prevStageName}
+                          </span>
+                        )}
+                      </div>
+
+                      {isStageLocked ? (
+                        <div className="text-center py-6 md:py-8 bg-secondary/20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl flex flex-col items-center gap-2">
+                          <Lock className="opacity-40 w-5 h-5" />
+                          <p className="font-bold text-xs md:text-sm">
+                            Låst tills föregående runda är färdigspelad.
+                          </p>
+                        </div>
+                      ) : (
+                        knockoutStages[stage].map((match) => (
+                          <MatchCard
+                            key={match.id}
+                            match={match}
+                            userBet={match.bets[0]}
+                          />
+                        ))
                       )}
                     </div>
-                    
-                    {isStageLocked ? (
-                      <div className="text-center py-6 md:py-8 bg-secondary/20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl flex flex-col items-center gap-2">
-                        <Lock className="opacity-40 w-5 h-5" />
-                        <p className="font-bold text-xs md:text-sm">
-                          Låst tills föregående runda är färdigspelad.
-                        </p>
-                      </div>
-                    ) : (
-                      knockoutStages[stage].map((match) => (
-                        <MatchCard
-                          key={match.id}
-                          match={match}
-                          userBet={match.bets[0]}
-                        />
-                      ))
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           )}
         </section>

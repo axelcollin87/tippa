@@ -12,7 +12,7 @@ model User {
   id              String              @id @default(uuid())
   email           String              @unique
   name            String
-  password        String // Hashed password
+  password        String? // Hashed password, optional for OAuth users
   isAdmin         Boolean             @default(false)
   isApproved      Boolean             @default(false) // Måste godkännas av Admin
   matchBets       MatchBet[]

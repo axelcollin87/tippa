@@ -59,6 +59,10 @@ export async function updatePassword(formData: FormData) {
       return { error: 'Användaren hittades inte' };
     }
 
+    if (!user || !user.password) {
+      return { error: 'Användaren saknar lösenord (inloggad via Google)' };
+    }
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return { error: 'Nuvarande lösenord är felaktigt' };

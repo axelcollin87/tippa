@@ -50,7 +50,7 @@ export default async function BetsPage(props: {
   }
 
   const groups: Record<string, Set<string>> = {};
-  const knockoutMatches = [];
+  const knockoutMatches: typeof allMatches = [];
 
   for (const match of allMatches) {
     if (match.groupName && match.groupName !== 'TBD') {
@@ -118,6 +118,48 @@ export default async function BetsPage(props: {
     { id: 'finals', label: 'Finaler', stages: ['3rd Place', 'Final'] },
   ];
 
+  // Beräkna status för varje slutspelsflik
+  const knockoutTabStatus: Record<string, 'completed' | 'started' | 'locked'> = {};
+  
+  if (!isGroupStageFinished) {
+    knockoutTabs.forEach(tab => knockoutTabStatus[tab.id] = 'locked');
+  } else {
+    knockoutTabs.forEach((tab, index) => {
+      // Kolla om föregående steg är klart (lås-logik)
+      let isStageLocked = false;
+      if (index > 0) {
+        const prevStages = knockoutTabs[index - 1].stages;
+        const prevStageMatches = knockoutMatches.filter(m => prevStages.includes(m.stage));
+        isStageLocked = prevStageMatches.length > 0 && !prevStageMatches.every(m => m.isCompleted);
+      }
+
+      if (isStageLocked) {
+        knockoutTabStatus[tab.id] = 'locked';
+      } else {
+        const tabMatches = knockoutMatches.filter(m => tab.stages.includes(m.stage));
+        if (tabMatches.length === 0) {
+          knockoutTabStatus[tab.id] = 'locked'; // Inga matcher ännu = låst/tomt
+        } else {
+          // Både tecken och "går vidare" måste vara i fyllt i slutspelet
+          const isComplete = tabMatches.every(m => m.bets.length > 0 && m.bets[0].predictedSign && m.bets[0].predictedWinner);
+          const hasAnyBet = tabMatches.some(m => m.bets.length > 0);
+          
+          if (isComplete) {
+            knockoutTabStatus[tab.id] = 'completed';
+          } else if (hasAnyBet) {
+            knockoutTabStatus[tab.id] = 'started';
+          } else {
+            // Om den är upplåst men helt utan tips, visa den som started/yellow så man ser att man ska tippa
+            knockoutTabStatus[tab.id] = 'started'; 
+          }
+        }
+      }
+    });
+  }
+
+  // Kolla om kristallkulan är komplett (alla 3 frågor besvarade)
+  const isCrystalBallComplete = crystalQuestions.length > 0 && crystalBets.length === crystalQuestions.length;
+
   return (
     <BetsClient 
       initialView={initialView}
@@ -137,6 +179,8 @@ export default async function BetsPage(props: {
       groupStatus={groupStatus}
       knockoutStages={knockoutStages}
       knockoutTabs={knockoutTabs}
+      knockoutTabStatus={knockoutTabStatus}
+      isCrystalBallComplete={isCrystalBallComplete}
     />
   );
 }

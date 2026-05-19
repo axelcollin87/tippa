@@ -1,5 +1,9 @@
 # Teknisk Design: Fotbolls-VM Tippning
 
+> [!CAUTION]
+> **PRODUKTIONSDATA ÄR HELIG**
+> Ändra aldrig data i produktion manuellt eller via script. Använd endast lokal miljö för testning.
+
 ## Arkitektur
 * **Frontend:** React (TypeScript) med Tailwind CSS och shadcn/ui.
 * **Backend:** Next.js App Router.
@@ -51,6 +55,11 @@ Poängen för en match beräknas baserat på den globala populariteten för det 
 * **Ligo-säkerhet:** Endast medlemmar i en liga kan hämta ligans data (leaderboard, chatt). `inviteCode` krävs för att gå med.
 
 ## Testning och Simulering
+> [!DANGER]
+> **DESSA VERKTYG FÅR ENDAST ANVÄNDAS LOKALT**
+> Följande funktioner nollställer eller ändrar data. Kör dem **ALDRIG** i produktion.
+> Se till att din `DATABASE_URL` pekar på en lokal instans innan du använder dessa.
+
 Simuleringsverktyg är inbyggda direkt i Admin-panelen (`src/app/admin/actions.ts`).
 1. **Rensa alla tips:** Nollställer hela databasens tips och allas poäng.
 2. **Slumpa Grupptips:** Genererar fiktiva 1X2- och ranking-tips för alla användare.

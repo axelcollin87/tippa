@@ -2,6 +2,10 @@
 
 En Next.js-applikation för att tippa Fotbolls-VM 2026 tillsammans med vänner.
 
+> [!CAUTION]
+> **PRODUKTIONSDATA ÄR LIVE!**
+> Sidan är lanserad. Kör **ALDRIG** destruktiva script eller migrations mot live-databasen. All utveckling sker lokalt.
+
 ## Funktioner
 * **Autentisering:** Registrering och inloggning. Admin måste godkänna nya användare innan de kan delta.
 * **Tippning Gruppspel:** Tippa 1X2 på alla matcher samt slutgiltig placering (1-4) i varje grupp.

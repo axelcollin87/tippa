@@ -22,10 +22,10 @@ export default function ProfilePage() {
 
     if (result.success) {
       setProfileMsg({ type: 'success', text: result.success });
-      // Uppdatera sessionen lokalt för att visa det nya namnet i UI
-      await update({ name: formData.get('name') });
+      // Tvinga sessionen att ladda om från servern (som nu hämtar senaste namnet)
+      await update();
     } else {
-      setProfileMsg({ type: 'error', text: result.error || 'Något gick fel' });
+      setProfileMsg({ type: 'error', text: result.error || 'NÃ¥got gick fel' });
     }
   }
 

@@ -11,18 +11,20 @@ interface Team {
 export default function CrystalBallQuestion({ 
   question, 
   userBet, 
-  allTeams 
+  allTeams,
+  isLocked: externalIsLocked
 }: { 
   question: any, 
   userBet: any, 
-  allTeams: { english: string, swedish: string }[] 
+  allTeams: { english: string, swedish: string }[],
+  isLocked?: boolean
 }) {
   const [answer, setAnswer] = useState(userBet?.answer || '');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const now = new Date();
-  const isLocked = now > new Date(question.lockedAt);
+  const isLocked = externalIsLocked !== undefined ? externalIsLocked : now > new Date(question.lockedAt);
   const hasChanges = answer !== (userBet?.answer || '');
 
   const handleSave = async (e: React.FormEvent) => {

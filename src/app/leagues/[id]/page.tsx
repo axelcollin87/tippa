@@ -3,7 +3,7 @@ import { authOptions } from '../../api/auth/[...nextauth]/route';
 import { redirect, notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { Users, Shield, ArrowLeft, Trophy, TrendingUp } from 'lucide-react';
+import { Users, Shield, ArrowLeft, Trophy, TrendingUp, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import ChatBox from '../ChatBox';
 import ShareLeagueButton from '../ShareLeagueButton';
 import { DeleteLeagueButton, LeaveLeagueButton } from '../LeagueActionButtons';
@@ -223,6 +223,25 @@ export default async function LeagueRoomPage(props: {
       >
         {/* LEFT COL: TRENDS & LEADERBOARD */}
         <div className={`${isGlobal ? '' : 'lg:col-span-2'} space-y-8 md:space-y-12`}>
+          
+          {/* TRENDS SECTION (Collapsible) */}
+          <details className="group space-y-4 md:space-y-6 bg-card border border-border rounded-xl md:rounded-3xl shadow-lg [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex items-center justify-between p-4 md:p-6 cursor-pointer list-none select-none">
+              <div className="flex items-center gap-2 md:gap-3">
+                <TrendingUp className="text-primary w-6 h-6 md:w-7 md:h-7" />
+                <h2 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">
+                  Formkurva
+                </h2>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground group-open:rotate-180 transition-transform">
+                <ChevronDown size={20} />
+              </div>
+            </summary>
+            <div className="px-3 pb-3 md:px-6 md:pb-6 pt-2 border-t border-border/10">
+              <LeagueTrendChart data={chartData} lines={chartLines} />
+            </div>
+          </details>
+
           {/* LEADERBOARD SECTION */}
           <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-2 md:gap-3">
@@ -236,7 +255,7 @@ export default async function LeagueRoomPage(props: {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-secondary/50 text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <th className="px-3 md:px-6 py-3 md:py-4 w-12 md:w-16">Pos</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 w-16 md:w-24">Pos</th>
                     <th className="px-3 md:px-6 py-3 md:py-4">Spelare</th>
                     <th className="px-3 md:px-6 py-3 md:py-4 text-center">Rätt</th>
                     <th className="px-3 md:px-6 py-3 md:py-4 text-right">Poäng</th>
@@ -246,25 +265,41 @@ export default async function LeagueRoomPage(props: {
                   {sortedMembers.map((member, index) => {
                     const isMe = member.userId === session.user.id;
                     const pos = index + 1;
+                    
+                    // Beräkna trend för privata ligor
+                    const previousRank = member.previousRank;
+                    const trend = (!previousRank || pos === previousRank) 
+                      ? 'same' 
+                      : pos < previousRank ? 'up' : 'down';
+
                     return (
                       <tr
                         key={member.id}
                         className={`${isMe ? 'bg-primary/5' : ''} transition-colors hover:bg-secondary/30`}
                       >
                         <td className="px-3 md:px-6 py-3 md:py-5">
-                          <span
-                            className={`flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded md:rounded-lg font-black text-xs md:text-sm ${
-                              pos === 1
-                                ? 'bg-yellow-500 text-white'
-                                : pos === 2
-                                  ? 'bg-slate-300 text-slate-700'
-                                  : pos === 3
-                                    ? 'bg-amber-600 text-white'
-                                    : 'text-muted-foreground'
-                            }`}
-                          >
-                            {pos}
-                          </span>
+                          <div className="flex items-center gap-2 md:gap-3">
+                            <span
+                              className={`flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded md:rounded-lg font-black text-xs md:text-sm ${
+                                pos === 1
+                                  ? 'bg-yellow-500 text-white'
+                                  : pos === 2
+                                    ? 'bg-slate-300 text-slate-700'
+                                    : pos === 3
+                                      ? 'bg-amber-600 text-white'
+                                      : 'text-muted-foreground'
+                              }`}
+                            >
+                              {pos}
+                            </span>
+                            {!isGlobal && (
+                              <div className="flex items-center justify-center w-4 md:w-5">
+                                {trend === 'up' && <ChevronUp className="text-green-500" size={16} strokeWidth={4} />}
+                                {trend === 'down' && <ChevronDown className="text-red-500" size={16} strokeWidth={4} />}
+                                {trend === 'same' && <Minus className="text-muted-foreground/30" size={16} strokeWidth={4} />}
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 md:px-6 py-3 md:py-5">
                           <div className="font-bold text-foreground flex items-center gap-1 md:gap-2 text-xs md:text-base">
@@ -298,20 +333,6 @@ export default async function LeagueRoomPage(props: {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-
-        {/* TRENDS SECTION */}
-        <div className="space-y-4 md:space-y-6">
-          <div className="flex items-center gap-2 md:gap-3">
-            <TrendingUp className="text-primary w-6 h-6 md:w-7 md:h-7" />
-            <h2 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">
-              Formkurva
-            </h2>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl md:rounded-3xl p-3 md:p-6 shadow-lg">
-            <LeagueTrendChart data={chartData} lines={chartLines} />
           </div>
         </div>
 

@@ -29,6 +29,7 @@ type BetsClientProps = {
   knockoutTabs: { id: string; label: string; stages: string[] }[];
   knockoutTabStatus: Record<string, 'completed' | 'started' | 'locked'>;
   isCrystalBallComplete: boolean;
+  firstMatchKickoff: Date | null;
 };
 
 export default function BetsClient({
@@ -51,6 +52,7 @@ export default function BetsClient({
   knockoutTabs,
   knockoutTabStatus,
   isCrystalBallComplete,
+  firstMatchKickoff,
 }: BetsClientProps) {
   const [view, setView] = useState(initialView);
   const [activeGroup, setActiveGroup] = useState<string | null>(
@@ -61,6 +63,8 @@ export default function BetsClient({
 
   const isKnockoutView = view === 'knockout';
   const isCrystalBallView = view === 'crystalball';
+
+  const isTournamentStarted = firstMatchKickoff ? new Date() >= firstMatchKickoff : false;
 
   const handleTabClick = (newView: string, group?: string, stage?: string) => {
     setView(newView);
@@ -103,9 +107,18 @@ export default function BetsClient({
           <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight uppercase">
             Mina Tips
           </h1>
-          <p className="text-muted-foreground mt-1 text-[11px] md:text-sm">
-            Klicka på en den grupp du vill tippa eller se resultat för.
-          </p>
+        </div>
+
+        {/* Deadlines Banner */}
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 md:p-4 text-xs md:text-sm text-foreground/80 leading-relaxed mt-2">
+          <strong className="text-primary uppercase tracking-widest text-[10px] block mb-1">
+            Viktigt om Deadlines
+          </strong>
+          Grupplaceringar (1-4) låses när{' '}
+          <span className="font-bold">första matchen i respektive grupp</span>{' '}
+          sparkar igång. Enskilda matchtips kan du däremot ändra fram tills{' '}
+          <span className="font-bold">1 timme innan avspark</span> för varje
+          specifik match.
         </div>
 
         <div className="flex flex-wrap gap-1.5 md:gap-2 pb-2 mt-2 md:mt-4 items-center">
@@ -115,8 +128,8 @@ export default function BetsClient({
               isCrystalBallView
                 ? 'bg-primary text-primary-foreground scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
                 : isCrystalBallComplete
-                ? 'bg-card text-muted-foreground hover:bg-secondary border-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]'
-                : 'bg-card text-muted-foreground hover:bg-secondary border-border'
+                  ? 'bg-card text-muted-foreground hover:bg-secondary border-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]'
+                  : 'bg-card text-muted-foreground hover:bg-secondary border-border'
             }`}
           >
             Topp 3 🏆
@@ -179,8 +192,7 @@ export default function BetsClient({
               else if (status === 'started')
                 statusBorder =
                   'border-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.3)]';
-              else
-                statusBorder = 'border-border opacity-50';
+              else statusBorder = 'border-border opacity-50';
 
               return (
                 <button
@@ -202,26 +214,48 @@ export default function BetsClient({
 
       {isCrystalBallView ? (
         <section className="space-y-4 md:space-y-6">
-          <div className="bg-primary/5 p-6 rounded-3xl border border-primary/20">
-            <h1 className="text-2xl md:text-4xl font-black text-primary uppercase tracking-widest flex items-center gap-3">
-              <span>🏆</span> TOPP 3 I VM
-            </h1>
-            <p className="text-muted-foreground mt-2 text-xs md:text-sm max-w-2xl">
-              Vem tror du kniper medaljerna? Dessa val måste göras innan första
-              matchen i VM blåses igång.
-            </p>
+          <div className="bg-primary/5 p-6 rounded-3xl border border-primary/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-4xl font-black text-primary uppercase tracking-widest flex items-center gap-3">
+                <span>🏆</span> TOPP 3 I VM
+              </h1>
+              <p className="text-muted-foreground mt-2 text-xs md:text-sm max-w-2xl">
+                Vem tror du kniper medaljerna? Dessa val måste göras innan första
+                matchen i VM blåses igång.
+              </p>
+            </div>
+            
+            {firstMatchKickoff && (
+              <div className="flex-shrink-0 bg-background border border-primary/20 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[200px]">
+                 {isTournamentStarted ? (
+                    <div className="text-destructive flex flex-col items-center gap-2">
+                       <Lock size={24} />
+                       <span className="font-black uppercase tracking-widest text-sm">Låst</span>
+                    </div>
+                 ) : (
+                    <div className="text-center">
+                       <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1 block">Tid kvar att tippa</span>
+                       <Countdown targetDate={firstMatchKickoff} label="" />
+                    </div>
+                 )}
+              </div>
+            )}
           </div>
 
           {crystalQuestions.length > 0 ? (
             <div className="grid gap-4 md:gap-6 md:grid-cols-3">
               {crystalQuestions.map((q) => {
                 const bet = crystalBets.find((b) => b.questionId === q.id);
+                // Lås frågan om antingen VM har startat, ELLER om dess specifika lockedAt har passerat
+                const isLocked = isTournamentStarted || new Date() > new Date(q.lockedAt);
+
                 return (
                   <CrystalBallQuestion
                     key={q.id}
                     question={q}
                     userBet={bet}
                     allTeams={allTeams}
+                    isLocked={isLocked}
                   />
                 );
               })}

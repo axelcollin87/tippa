@@ -160,6 +160,8 @@ export default async function BetsPage(props: {
   // Kolla om kristallkulan är komplett (alla 3 frågor besvarade)
   const isCrystalBallComplete = crystalQuestions.length > 0 && crystalBets.length === crystalQuestions.length;
 
+  const firstMatchKickoff = allMatches.length > 0 ? allMatches[0].kickoff : null;
+
   return (
     <BetsClient 
       initialView={initialView}
@@ -181,6 +183,7 @@ export default async function BetsPage(props: {
       knockoutTabs={knockoutTabs}
       knockoutTabStatus={knockoutTabStatus}
       isCrystalBallComplete={isCrystalBallComplete}
+      firstMatchKickoff={firstMatchKickoff}
     />
   );
 }

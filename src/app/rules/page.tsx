@@ -118,8 +118,71 @@ export default function RulesPage() {
         </div>
       </div>
 
+      {/* Deadlines & Checklist */}
+      <section className="bg-card rounded-[2.5rem] border border-border p-8 md:p-12 relative overflow-hidden shadow-lg mt-16">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
+
+        <div className="relative z-10 space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-foreground shadow-sm">
+              <Target size={24} />
+            </div>
+            <h2 className="text-2xl font-black uppercase tracking-tight">
+              Deadlines & Checklista
+            </h2>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-destructive"></span>
+                1. Innan VM börjar
+              </h3>
+
+              <ul className="ml-4 mt-2 space-y-2 text-sm text-muted-foreground list-disc list-inside">
+                <li>
+                  <strong className="text-foreground">Gruppspel:</strong> Tippa
+                  placeringen (1:a till 4:e) för ALLA lag i gruppspelet.{' '}
+                  <span className="text-destructive font-bold">
+                    Dessa låses när turneringens första match börjar.
+                  </span>
+                </li>
+                <li>
+                  <strong className="text-foreground">Top 3:</strong> Tippa
+                  medaljerna (1-3), detta behöver sparas innan första matchen i
+                  VM.
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary"></span>
+                2. Löpande under turneringen
+              </h3>
+              <p className="text-sm text-muted-foreground ml-4 leading-relaxed">
+                Du behöver inte tippa alla matcher i förväg. För varje enskild
+                match gäller:
+              </p>
+              <ul className="ml-4 mt-2 space-y-2 text-sm text-muted-foreground list-disc list-inside">
+                <li>
+                  <strong className="text-foreground">
+                    Matchtips (1X2 & Avancemang):
+                  </strong>{' '}
+                  Du kan tippa och ändra dina tips fram tills{' '}
+                  <span className="text-primary font-bold">
+                    1 timme innan avspark
+                  </span>{' '}
+                  för den specifika matchen. Därefter är matchen låst!
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* The Two Phases */}
-      <div className="grid gap-10 md:grid-cols-2">
+      <div className="grid gap-10 md:grid-cols-2 mt-16">
         {/* Phase 1 */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">

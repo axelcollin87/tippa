@@ -113,6 +113,17 @@ export async function saveCrystalBallBet(formData: FormData) {
   if (!question) throw new Error('Frågan finns inte.');
 
   const now = new Date();
+  
+  // Explicit blockering baserat på VM's första match
+  const firstMatch = await prisma.match.findFirst({
+    orderBy: { kickoff: 'asc' },
+  });
+
+  if (firstMatch && now >= firstMatch.kickoff) {
+    throw new Error('Kristallkulan är låst eftersom turneringen har startat.');
+  }
+
+  // Backup: Om admin satt en specifik lockedAt som har passerats
   if (now > question.lockedAt) {
     throw new Error('Tiden för att svara på denna fråga har gått ut.');
   }
@@ -134,6 +145,7 @@ export async function saveCrystalBallBet(formData: FormData) {
 
   revalidatePath('/bets');
 }
+
 export async function saveGroupPlacement(groupName: string, selectedTeams: string[]) {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error('Du måste vara inloggad för att tippa.');
@@ -173,8 +185,7 @@ export async function saveGroupPlacement(groupName: string, selectedTeams: strin
   });
 
   if (firstMatchInGroup) {
-    const lockTime = new Date(firstMatchInGroup.kickoff.getTime() - 60 * 60 * 1000); // 1 timme före kickoff
-    if (new Date() > lockTime) {
+    if (new Date() >= firstMatchInGroup.kickoff) {
       throw new Error('Gruppen är låst för tippning då dess matcher har startat!');
     }
   }

@@ -64,13 +64,27 @@ export default async function UserProfilePage(props: {
   // A match is locked 1 hour before kickoff
   const matchLockTime = new Date(now.getTime() + 60 * 60 * 1000);
 
-  // Group placements are locked when the first match starts
-  const firstMatch = await prisma.match.findFirst({
+  // Fetch all matches to determine tournament start and individual group lock times
+  const allMatches = await prisma.match.findMany({
     orderBy: { kickoff: 'asc' },
+    select: { groupName: true, kickoff: true },
   });
+
+  const firstMatch = allMatches[0];
   const tournamentStarted = firstMatch
     ? now >= new Date(firstMatch.kickoff)
     : false;
+
+  const groupLockTimes: Record<string, Date> = {};
+  for (const match of allMatches) {
+    if (
+      match.groupName &&
+      match.groupName !== 'TBD' &&
+      !groupLockTimes[match.groupName]
+    ) {
+      groupLockTimes[match.groupName] = match.kickoff;
+    }
+  }
 
   // 3. Fetch Locked Bets
 
@@ -91,26 +105,25 @@ export default async function UserProfilePage(props: {
   });
 
   // Locked Sidebets
-  const lockedSidebets = await prisma.userSidebet.findMany({
-    where: {
-      userId: user.id,
-      question: {
-        lockedAt: { lte: now }, // Only fetch bets for questions that are locked
-      },
-    },
-    include: {
-      question: true,
-    },
+  const allSidebets = await prisma.userSidebet.findMany({
+    where: { userId: user.id },
+    include: { question: true },
   });
+  // Visas om antingen turneringen har startat ELLER om den specifika frågan har passerat sin lockedAt
+  const lockedSidebets = allSidebets.filter(
+    (bet) => tournamentStarted || now >= new Date(bet.question.lockedAt)
+  );
 
   // Locked Group Placements
-  let lockedGroupBets: any[] = [];
-  if (tournamentStarted) {
-    lockedGroupBets = await prisma.groupPlacementBet.findMany({
-      where: { userId: user.id },
-      orderBy: [{ groupName: 'asc' }, { predictedRank: 'asc' }],
-    });
-  }
+  const allGroupBets = await prisma.groupPlacementBet.findMany({
+    where: { userId: user.id },
+    orderBy: [{ groupName: 'asc' }, { predictedRank: 'asc' }],
+  });
+  // Visas endast om gruppens specifika första match har startat
+  const lockedGroupBets = allGroupBets.filter((bet) => {
+    const lockTime = groupLockTimes[bet.groupName];
+    return lockTime && now >= new Date(lockTime);
+  });
 
   const isMe = session.user.id === user.id;
 
@@ -274,7 +287,7 @@ export default async function UserProfilePage(props: {
           {/* SIDEBETS */}
           <div className="space-y-4">
             <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
-              Kristallkulan
+              Top 3
             </h3>
             {lockedSidebets.length > 0 ? (
               <div className="space-y-3">

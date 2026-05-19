@@ -205,7 +205,7 @@ export default function RulesPage() {
               },
               {
                 title: 'Topp 3',
-                desc: 'Tippa hela mästerskapets Topp 3 innan turneringen drar igång. 500/750/1000p respektive.',
+                desc: 'Tippa hela mästerskapets Topp 3 innan turneringen drar igång. 200/400/600p respektive.',
               },
               {
                 title: 'Deadline',

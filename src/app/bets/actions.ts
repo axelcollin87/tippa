@@ -26,8 +26,8 @@ export async function saveBet(formData: FormData) {
   const lockTime = new Date(match.kickoff.getTime() - 60 * 60 * 1000);
   if (match.isCompleted || new Date() > lockTime) {
     throw new Error(
-      match.isCompleted 
-        ? 'Matchen är redan avslutad.' 
+      match.isCompleted
+        ? 'Matchen är redan avslutad.'
         : 'Tipset är låst. Du måste spara ditt tips senast 1 timme innan matchstart.'
     );
   }
@@ -67,16 +67,22 @@ export async function saveProgressBet(formData: FormData) {
   });
 
   if (!match) throw new Error('Matchen hittades inte.');
-  if (match.stage === 'Group') throw new Error('Kan inte spara avancemang i gruppspel.');
+  if (match.stage === 'Group')
+    throw new Error('Kan inte spara avancemang i gruppspel.');
 
   // Validera att vinnaren är ett av lagen i matchen
-  if (predictedWinner !== match.homeTeam && predictedWinner !== match.awayTeam) {
+  if (
+    predictedWinner !== match.homeTeam &&
+    predictedWinner !== match.awayTeam
+  ) {
     throw new Error('Ogiltigt lag valt som vinnare.');
   }
 
   const lockTime = new Date(match.kickoff.getTime() - 60 * 60 * 1000);
   if (match.isCompleted || new Date() > lockTime) {
-    throw new Error(match.isCompleted ? 'Matchen är redan avslutad.' : 'Tipset är låst.');
+    throw new Error(
+      match.isCompleted ? 'Matchen är redan avslutad.' : 'Tipset är låst.'
+    );
   }
 
   await prisma.matchBet.upsert({
@@ -107,20 +113,23 @@ export async function saveCrystalBallBet(formData: FormData) {
   const questionId = formData.get('questionId') as string;
   const answer = formData.get('answer') as string;
 
-  if (!answer || answer.trim() === '') throw new Error('Svaret kan inte vara tomt.');
+  if (!answer || answer.trim() === '')
+    throw new Error('Svaret kan inte vara tomt.');
 
-  const question = await prisma.sidebetQuestion.findUnique({ where: { id: questionId } });
+  const question = await prisma.sidebetQuestion.findUnique({
+    where: { id: questionId },
+  });
   if (!question) throw new Error('Frågan finns inte.');
 
   const now = new Date();
-  
+
   // Explicit blockering baserat på VM's första match
   const firstMatch = await prisma.match.findFirst({
     orderBy: { kickoff: 'asc' },
   });
 
   if (firstMatch && now >= firstMatch.kickoff) {
-    throw new Error('Kristallkulan är låst eftersom turneringen har startat.');
+    throw new Error('Top 3 är låst eftersom turneringen har startat.');
   }
 
   // Backup: Om admin satt en specifik lockedAt som har passerats
@@ -146,7 +155,10 @@ export async function saveCrystalBallBet(formData: FormData) {
   revalidatePath('/bets');
 }
 
-export async function saveGroupPlacement(groupName: string, selectedTeams: string[]) {
+export async function saveGroupPlacement(
+  groupName: string,
+  selectedTeams: string[]
+) {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error('Du måste vara inloggad för att tippa.');
 
@@ -159,7 +171,7 @@ export async function saveGroupPlacement(groupName: string, selectedTeams: strin
   // Validera att lagen faktiskt tillhör gruppen
   const groupMatches = await prisma.match.findMany({
     where: { groupName: groupName },
-    select: { homeTeam: true, awayTeam: true }
+    select: { homeTeam: true, awayTeam: true },
   });
 
   if (groupMatches.length === 0) {
@@ -167,7 +179,7 @@ export async function saveGroupPlacement(groupName: string, selectedTeams: strin
   }
 
   const validTeamsForGroup = new Set<string>();
-  groupMatches.forEach(match => {
+  groupMatches.forEach((match) => {
     validTeamsForGroup.add(match.homeTeam);
     validTeamsForGroup.add(match.awayTeam);
   });
@@ -186,7 +198,9 @@ export async function saveGroupPlacement(groupName: string, selectedTeams: strin
 
   if (firstMatchInGroup) {
     if (new Date() >= firstMatchInGroup.kickoff) {
-      throw new Error('Gruppen är låst för tippning då dess matcher har startat!');
+      throw new Error(
+        'Gruppen är låst för tippning då dess matcher har startat!'
+      );
     }
   }
 

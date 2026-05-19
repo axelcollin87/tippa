@@ -26,7 +26,15 @@ import UsernamePromptModal from '@/components/UsernamePromptModal';
 
 // 1. Dashboard Innehåll (All tunga data hämtas här)
 async function DashboardContent({ session }: { session: any }) {
-  const [allMatchesWithBets, userBets, userLeaguesWithDetails, allUsers] =
+  const activeUsersWhereClause = {
+    OR: [
+      { matchBets: { some: {} } },
+      { groupPlacements: { some: {} } },
+      { UserSidebet: { some: {} } },
+    ]
+  };
+
+  const [allMatchesWithBets, userBets, userLeaguesWithDetails, activeUsers] =
     await Promise.all([
       prisma.match.findMany({
         orderBy: { kickoff: 'asc' },
@@ -56,17 +64,20 @@ async function DashboardContent({ session }: { session: any }) {
         },
       }),
       prisma.user.findMany({
+        where: activeUsersWhereClause,
         orderBy: { totalScore: 'desc' },
         select: { id: true, totalScore: true },
       }),
     ]);
 
   const now = new Date();
+  const firstMatch = allMatchesWithBets[0];
+  const tournamentStarted = firstMatch && now >= new Date(firstMatch.kickoff);
 
   // Beräkna global ranking
-  const currentUserData = allUsers.find((u) => u.id === session.user.id);
-  const globalRank = allUsers.findIndex((u) => u.id === session.user.id) + 1;
-  const totalPoints = currentUserData?.totalScore || 0;
+  const currentUserData = activeUsers.find((u) => u.id === session.user.id);
+  const globalRank = activeUsers.findIndex((u) => u.id === session.user.id) + 1;
+  const totalPoints = (await prisma.user.findUnique({ where: { id: session.user.id }, select: { totalScore: true } }))?.totalScore || 0;
 
   // Formatera data för Scoreboard
   const scoreboardLeagues = userLeaguesWithDetails.map((league) => {
@@ -85,16 +96,18 @@ async function DashboardContent({ session }: { session: any }) {
     };
   });
 
-  // Lägg till globala ligan
-  scoreboardLeagues.unshift({
-    id: 'global',
-    name: 'Globala Tabellen',
-    currentRank: globalRank,
-    previousRank: null,
-    isFavorite: false,
-    memberCount: allUsers.length,
-    groupName: null,
-  });
+  // Lägg till globala ligan endast om turneringen har startat
+  if (tournamentStarted) {
+    scoreboardLeagues.unshift({
+      id: 'global',
+      name: 'Globala Tabellen',
+      currentRank: globalRank > 0 ? globalRank : (activeUsers.length + 1), // Visa som sist om man inte tippat än? Eller 0?
+      previousRank: null,
+      isFavorite: false,
+      memberCount: activeUsers.length,
+      groupName: null,
+    });
+  }
 
   const upcomingMatches = allMatchesWithBets
     .filter((m) => new Date(m.kickoff.getTime() - 60 * 60 * 1000) > now && !m.isCompleted)
@@ -122,9 +135,6 @@ async function DashboardContent({ session }: { session: any }) {
   );
 
   const anyGroupMatchesLeft = allMatchesWithBets.some((m) => m.groupName && !m.isCompleted);
-
-  const firstMatch = allMatchesWithBets[0];
-  const tournamentStarted = firstMatch && new Date() >= new Date(firstMatch.kickoff);
 
   const missingBetsCount = allMatchesWithBets.filter((m) => {
     const isMissing = !userBets.some((b) => b.matchId === m.id);

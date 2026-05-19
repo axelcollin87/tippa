@@ -26,8 +26,25 @@ export default async function LeagueRoomPage(props: {
   let isAdmin = false;
   let inviteCode = 'GLOBAL';
 
+  // Kolla om turneringen har startat genom att kolla första matchen
+  const firstMatch = await prisma.match.findFirst({
+    orderBy: { kickoff: 'asc' },
+  });
+  const tournamentStarted = firstMatch && new Date() >= new Date(firstMatch.kickoff);
+
+  if (isGlobal && !tournamentStarted) {
+    redirect('/leagues');
+  }
+
   if (isGlobal) {
     const allUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { matchBets: { some: {} } },
+          { groupPlacements: { some: {} } },
+          { UserSidebet: { some: {} } },
+        ]
+      },
       select: {
         id: true,
         name: true,
@@ -251,7 +268,9 @@ export default async function LeagueRoomPage(props: {
                         </td>
                         <td className="px-3 md:px-6 py-3 md:py-5">
                           <div className="font-bold text-foreground flex items-center gap-1 md:gap-2 text-xs md:text-base">
-                            <span className="truncate max-w-[100px] md:max-w-none">{member.user.name}</span>
+                            <Link href={`/user/${member.userId}`} className="truncate max-w-[100px] md:max-w-none hover:text-primary transition-colors hover:underline">
+                              {member.user.name}
+                            </Link>
                             {isMe && (
                               <span className="text-[8px] bg-primary/20 text-primary px-1 py-0.5 rounded uppercase">
                                 Du

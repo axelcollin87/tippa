@@ -43,15 +43,41 @@ export default async function LeaguesPage(props: {
     },
   });
 
-  const allUsersCount = await prisma.user.count();
+  // Kolla om turneringen har startat genom att kolla första matchen
+  const firstMatch = await prisma.match.findFirst({
+    orderBy: { kickoff: 'asc' },
+  });
+  const tournamentStarted = firstMatch && new Date() >= new Date(firstMatch.kickoff);
+
+  // För globala tabellen: Visa endast användare som har tippat något
+  const activeUsersWhereClause = {
+    OR: [
+      { matchBets: { some: {} } },
+      { groupPlacements: { some: {} } },
+      { UserSidebet: { some: {} } },
+    ]
+  };
+
+  const allUsersCount = await prisma.user.count({
+    where: activeUsersWhereClause
+  });
+
   const allUsers = await prisma.user.findMany({
+    where: activeUsersWhereClause,
     orderBy: { totalScore: 'desc' },
     select: { id: true, name: true, totalScore: true }
   });
+
+  // Om användaren själv inte har tippat än, lägg till hen i listan för att kunna se sin (botten)ranking?
+  // User sa: "bara ta med folk som faktiskt genomfört tippning". 
+  // Men för UX är det nog bra om man ser sig själv även om man har 0p och inte tippat, 
+  // ELLER så döljer vi hela globala för användaren om de inte tippat?
+  // Jag följer instruktionen strikt: endast de som tippat.
+  
   const globalRank = allUsers.findIndex(u => u.id === session.user.id) + 1;
   const myTotalScore = allUsers.find(u => u.id === session.user.id)?.totalScore || 0;
 
-  if (showGlobal) {
+  if (showGlobal && tournamentStarted) {
     return (
       <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
         <div className="flex items-center justify-between border-b border-border pb-6">
@@ -64,7 +90,7 @@ export default async function LeaguesPage(props: {
             </h1>
           </div>
           <div className="text-right">
-             <div className="text-3xl font-black text-primary">#{globalRank}</div>
+             <div className="text-3xl font-black text-primary">{globalRank > 0 ? `#${globalRank}` : 'Ej rankad'}</div>
              <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Din Ranking</div>
           </div>
         </div>
@@ -88,7 +114,9 @@ export default async function LeaguesPage(props: {
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-bold text-foreground flex items-center gap-2">
-                      {u.name}
+                      <Link href={`/user/${u.id}`} className="hover:text-primary transition-colors hover:underline">
+                        {u.name}
+                      </Link>
                       {u.id === session.user.id && <span className="text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase">Du</span>}
                     </div>
                   </td>
@@ -97,11 +125,23 @@ export default async function LeaguesPage(props: {
                   </td>
                 </tr>
               ))}
+              {allUsers.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground italic">
+                    Inga användare har tippat än.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
     );
+  }
+
+  // Om man försöker se globala innan den startat, redirect
+  if (showGlobal && !tournamentStarted) {
+    redirect('/leagues');
   }
 
   return (
@@ -122,52 +162,54 @@ export default async function LeaguesPage(props: {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* GLOBAL TABLE CARD */}
-        <Link
-          href="/leagues?global=true"
-          className="bg-card border-2 border-primary/20 rounded-[2rem] p-6 hover:border-primary/50 hover:shadow-xl transition-all group flex flex-col justify-between min-h-[260px] relative overflow-hidden shadow-[0_0_20px_rgba(var(--primary),0.05)]"
-        >
-          <div className="absolute top-0 right-0 p-8 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
-              <span className="text-8xl font-black italic tracking-tighter text-primary">#{globalRank}</span>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <span className="text-2xl">🌍</span>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-black text-primary">#{globalRank}</div>
-                <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">Global Rank</div>
-              </div>
+        {/* GLOBAL TABLE CARD - Endast om turneringen startat */}
+        {tournamentStarted && (
+          <Link
+            href="/leagues?global=true"
+            className="bg-card border-2 border-primary/20 rounded-[2rem] p-6 hover:border-primary/50 hover:shadow-xl transition-all group flex flex-col justify-between min-h-[260px] relative overflow-hidden shadow-[0_0_20px_rgba(var(--primary),0.05)]"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
+                <span className="text-8xl font-black italic tracking-tighter text-primary">{globalRank > 0 ? `#${globalRank}` : '-'}</span>
             </div>
-            <h3 className="text-2xl font-black text-foreground uppercase mb-1 group-hover:text-primary transition-colors line-clamp-1">
-              Globala Tabellen
-            </h3>
-            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-4">
-              Officiell VM-Ranking
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <div className="bg-primary/5 rounded-2xl p-3 flex justify-between items-center">
-              <div>
-                <div className="text-lg font-black text-foreground">{myTotalScore}</div>
-                <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none">Dina Poäng</div>
+            <div>
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <span className="text-2xl">🌍</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-primary">{globalRank > 0 ? `#${globalRank}` : 'Ej rankad'}</div>
+                  <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">Global Rank</div>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-lg font-black text-foreground">{allUsersCount}</div>
-                <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none">Spelare Totalt</div>
+              <h3 className="text-2xl font-black text-foreground uppercase mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                Globala Tabellen
+              </h3>
+              <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-4">
+                Officiell VM-Ranking
               </div>
             </div>
 
-            <div className="flex items-center justify-end">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground transition-colors group-hover:translate-x-1">
-                <ArrowRight size={14} />
+            <div className="space-y-4">
+              <div className="bg-primary/5 rounded-2xl p-3 flex justify-between items-center">
+                <div>
+                  <div className="text-lg font-black text-foreground">{myTotalScore}</div>
+                  <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none">Dina Poäng</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-black text-foreground">{allUsersCount}</div>
+                  <div className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none">Spelare Totalt</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground transition-colors group-hover:translate-x-1">
+                  <ArrowRight size={14} />
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        )}
 
         {leagues.map((league) => {
             // Beräkna rank i denna liga

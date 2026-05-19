@@ -105,6 +105,8 @@ export const authOptions: NextAuthOptions = {
 
         session.user.id = token.id as string;
         session.user.isAdmin = dbUser.isAdmin;
+        // Alltid hämta det absolut senaste namnet från databasen till sessionen
+        session.user.name = dbUser.name;
       }
       return session;
     }

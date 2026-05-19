@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { updateProfile } from '@/app/profile/actions';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
   Loader2,
   User as UserIcon,
@@ -16,6 +17,7 @@ interface UsernamePromptModalProps {
 }
 
 export default function UsernamePromptModal({ currentName }: UsernamePromptModalProps) {
+  const { update: updateSession } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [newName, setNewName] = useState(currentName.replace(/\s+/g, '_'));
   const [isLoading, setIsLoading] = useState(false);
@@ -27,8 +29,9 @@ export default function UsernamePromptModal({ currentName }: UsernamePromptModal
     // 1. Kolla om namnet innehåller mellanslag
     const hasSpace = currentName.includes(' ');
     
-    // 2. Kolla om användaren redan stängt modalen i denna webbläsare
-    const hasDismissed = localStorage.getItem('dismissed_username_prompt');
+    // 2. Kolla om användaren redan stängt modalen med FLIT (utan att byta namn)
+    //    eller om de redan lyckats byta namn tidigare.
+    const hasDismissed = localStorage.getItem(`dismissed_username_${currentName}`);
 
     if (hasSpace && !hasDismissed) {
       setIsOpen(true);
@@ -36,7 +39,8 @@ export default function UsernamePromptModal({ currentName }: UsernamePromptModal
   }, [currentName]);
 
   const handleClose = () => {
-    localStorage.setItem('dismissed_username_prompt', 'true');
+    // Spara att DE HÄR SPECIFIKA namnet har "bevisligen" dismissats av användaren
+    localStorage.setItem(`dismissed_username_${currentName}`, 'true');
     setIsOpen(false);
   };
 
@@ -45,7 +49,6 @@ export default function UsernamePromptModal({ currentName }: UsernamePromptModal
     setError(null);
     setIsLoading(true);
 
-    // Validering: Inga mellanslag tillåtna
     if (newName.includes(' ')) {
       setError('Mellanslag är inte tillåtna i användarnamnet. Använd understreck (_) eller bindestreck (-) istället.');
       setIsLoading(false);
@@ -75,9 +78,10 @@ export default function UsernamePromptModal({ currentName }: UsernamePromptModal
     } else {
       setSuccess(true);
       setIsLoading(false);
-      localStorage.setItem('dismissed_username_prompt', 'true');
       
-      // Vänta lite innan vi stänger och laddar om
+      // Tvinga klient-sessionen att uppdatera sig mot servern (som nu läser nya dbUser.name)
+      await updateSession();
+      
       setTimeout(() => {
         setIsOpen(false);
         router.refresh();

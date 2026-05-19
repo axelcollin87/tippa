@@ -3,14 +3,15 @@ import { authOptions } from './api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import {
   AlertCircle,
   Calendar,
-  ArrowRight,
   Trophy,
   Users,
   Zap,
   MessageSquare,
+  Loader2
 } from 'lucide-react';
 import Countdown from '@/components/Countdown';
 import TeamBadge from '@/components/TeamBadge';
@@ -18,27 +19,19 @@ import LiveMatchCard from '@/components/LiveMatchCard';
 import InfoPopover from '@/components/InfoPopover';
 import DashboardTour from '@/components/DashboardTour';
 import { getPotentialWinningsForSign } from '@/lib/scoring';
-
 import Scoreboard from '@/components/Scoreboard';
 
-export default async function Home() {
-  const session = await getServerSession(authOptions);
+// -- DEL-KOMPONENTER FÖR SUSPENSE --
 
-  if (!session) {
-    redirect('/login');
-  }
-
+// 1. Dashboard Innehåll (All tunga data hämtas här)
+async function DashboardContent({ session }: { session: any }) {
   const [allMatchesWithBets, userBets, userLeaguesWithDetails, allUsers] =
     await Promise.all([
       prisma.match.findMany({
         orderBy: { kickoff: 'asc' },
         include: {
           bets: {
-            include: {
-              user: {
-                select: { name: true },
-              },
-            },
+            include: { user: { select: { name: true } } },
           },
         },
       }),
@@ -51,9 +44,7 @@ export default async function Home() {
         },
         include: {
           members: {
-            include: {
-              user: { select: { id: true, totalScore: true } },
-            },
+            include: { user: { select: { id: true, totalScore: true } } },
           },
           _count: { select: { members: true } },
           comments: {
@@ -78,16 +69,9 @@ export default async function Home() {
 
   // Formatera data för Scoreboard
   const scoreboardLeagues = userLeaguesWithDetails.map((league) => {
-    const myMembership = league.members.find(
-      (m) => m.userId === session.user.id
-    );
-
-    // Beräkna nuvarande rank i denna ligan
-    const sortedMembers = [...league.members].sort(
-      (a, b) => b.user.totalScore - a.user.totalScore
-    );
-    const currentRank =
-      sortedMembers.findIndex((m) => m.userId === session.user.id) + 1;
+    const myMembership = league.members.find((m) => m.userId === session.user.id);
+    const sortedMembers = [...league.members].sort((a, b) => b.user.totalScore - a.user.totalScore);
+    const currentRank = sortedMembers.findIndex((m) => m.userId === session.user.id) + 1;
 
     return {
       id: league.id,
@@ -96,13 +80,11 @@ export default async function Home() {
       previousRank: myMembership?.previousRank ?? null,
       isFavorite: myMembership?.isFavorite ?? false,
       memberCount: league._count.members,
-      groupName: league.name.startsWith('Grupp ')
-        ? league.name.split(' ')[1]
-        : null,
+      groupName: league.name.startsWith('Grupp ') ? league.name.split(' ')[1] : null,
     };
   });
 
-  // Lägg till globala ligan i scoreboard
+  // Lägg till globala ligan
   scoreboardLeagues.unshift({
     id: 'global',
     name: 'Globala Tabellen',
@@ -114,10 +96,7 @@ export default async function Home() {
   });
 
   const upcomingMatches = allMatchesWithBets
-    .filter(
-      (m) =>
-        new Date(m.kickoff.getTime() - 60 * 60 * 1000) > now && !m.isCompleted
-    )
+    .filter((m) => new Date(m.kickoff.getTime() - 60 * 60 * 1000) > now && !m.isCompleted)
     .slice(0, 4);
 
   const activeMatches = allMatchesWithBets.filter(
@@ -132,26 +111,16 @@ export default async function Home() {
         'X': await getPotentialWinningsForSign(match.id, 'X'),
         '2': await getPotentialWinningsForSign(match.id, '2'),
       };
-
       const progressPotential = { home: 0, away: 0 };
       if (!match.groupName) {
-        progressPotential.home = await getPotentialWinningsForSign(
-          match.id,
-          '1'
-        );
-        progressPotential.away = await getPotentialWinningsForSign(
-          match.id,
-          '2'
-        );
+        progressPotential.home = await getPotentialWinningsForSign(match.id, '1');
+        progressPotential.away = await getPotentialWinningsForSign(match.id, '2');
       }
-
       return { ...match, myBet, potentialWinnings, progressPotential };
     })
   );
 
-  const anyGroupMatchesLeft = allMatchesWithBets.some(
-    (m) => m.groupName && !m.isCompleted
-  );
+  const anyGroupMatchesLeft = allMatchesWithBets.some((m) => m.groupName && !m.isCompleted);
 
   const missingBetsCount = allMatchesWithBets.filter((m) => {
     const isMissing = !userBets.some((b) => b.matchId === m.id);
@@ -160,40 +129,25 @@ export default async function Home() {
     const isNotCompleted = !m.isCompleted;
 
     if (!isMissing || !isBettable || !isNotCompleted) return false;
+    if (anyGroupMatchesLeft) return !!m.groupName;
 
-    // Om det finns gruppspelsmatcher kvar som inte är klara, räkna bara dem
-    if (anyGroupMatchesLeft) {
-      return !!m.groupName;
-    }
-
-    // Om gruppspelet är helt klart, räkna bara nästa relevanta slutspelsrunda
-    // (för att inte visa 16 matcher när man bara kan veta lagen i nästa steg)
     const firstUpcomingKnockout = allMatchesWithBets
       .filter((km) => !km.groupName && !km.isCompleted)
       .sort((a, b) => a.kickoff.getTime() - b.kickoff.getTime())[0];
 
     if (firstUpcomingKnockout) {
-      if (
-        firstUpcomingKnockout.stage === '3rd Place' ||
-        firstUpcomingKnockout.stage === 'Final'
-      ) {
+      if (firstUpcomingKnockout.stage === '3rd Place' || firstUpcomingKnockout.stage === 'Final') {
         return m.stage === '3rd Place' || m.stage === 'Final';
       }
       return m.stage === firstUpcomingKnockout.stage;
     }
-
     return true;
   }).length;
 
   return (
-    <div className="py-4 px-3 sm:py-6 sm:px-6 lg:px-8 space-y-6 sm:space-y-10 max-w-6xl mx-auto">
-      <DashboardTour />
-
-      {/* HERO SECTION */}
-      <div
-        id="tour-welcome"
-        className="relative bg-card rounded-2xl sm:rounded-[2.5rem] border border-border overflow-hidden shadow-2xl"
-      >
+    <>
+      {/* HERO SECTION - UPPER UPDATED WITH REAL DATA */}
+      <div id="tour-welcome" className="relative bg-card rounded-2xl sm:rounded-[2.5rem] border border-border overflow-hidden shadow-2xl mb-6 sm:mb-10">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -mr-40 -mt-40 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none"></div>
 
@@ -212,7 +166,7 @@ export default async function Home() {
                 href="/bets"
                 className="text-[10px] font-black uppercase hover:underline tracking-widest"
               >
-                <div className="inline-flex items-center gap-1.5 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                <div className="inline-flex items-center gap-1.5 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">  
                   <AlertCircle size={12} />
                   {missingBetsCount} otippade kvar!
                 </div>
@@ -250,8 +204,10 @@ export default async function Home() {
 
       {/* DASHBOARD GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
+        
         {/* LEFT & CENTER: MATCHES */}
         <div className="lg:col-span-2 space-y-8 md:space-y-10">
+          
           {/* LIVE MATCHES */}
           {activeMatchesWithData.length > 0 && (
             <div className="space-y-4 md:space-y-6">
@@ -278,16 +234,10 @@ export default async function Home() {
                   Kommande
                 </h2>
                 <InfoPopover title="Matcher">
-                  <p>
-                    Här ser du de tre närmaste matcherna. Tippa senast 1 timme
-                    innan avspark!
-                  </p>
+                  <p>Här ser du de tre närmaste matcherna. Tippa senast 1 timme innan avspark!</p>
                 </InfoPopover>
               </div>
-              <Link
-                href="/bets"
-                className="text-[10px] font-black text-primary uppercase hover:underline tracking-widest"
-              >
+              <Link href="/bets" className="text-[10px] font-black text-primary uppercase hover:underline tracking-widest">
                 Till mina tips &rarr;
               </Link>
             </div>
@@ -307,24 +257,16 @@ export default async function Home() {
                       <div className="space-y-2 md:space-y-3">
                         <div className="flex items-center gap-2 md:gap-3">
                           <span className="text-[9px] md:text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase tracking-widest">
-                            {match.groupName
-                              ? `Grupp ${match.groupName}`
-                              : match.stage}
+                            {match.groupName ? `Grupp ${match.groupName}` : match.stage}
                           </span>
                           <Countdown targetDate={match.kickoff} />
                         </div>
                         <div className="text-lg md:text-xl font-black text-foreground flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-                          <TeamBadge
-                            teamName={match.homeTeam}
-                            className="text-md md:text-lg"
-                          />
+                          <TeamBadge teamName={match.homeTeam} className="text-md md:text-lg" />
                           <span className="text-muted-foreground text-[10px] font-medium uppercase opacity-30 hidden sm:inline">
                             vs
                           </span>
-                          <TeamBadge
-                            teamName={match.awayTeam}
-                            className="text-md md:text-lg"
-                          />
+                          <TeamBadge teamName={match.awayTeam} className="text-md md:text-lg" />
                         </div>
                       </div>
 
@@ -413,6 +355,58 @@ export default async function Home() {
           </div>
         </div>
       </div>
+    </>
+  );
+}
+
+// 2. Loading Skeleton för Dashboard
+function DashboardSkeleton({ name }: { name: string }) {
+  return (
+    <>
+      <div className="relative bg-card rounded-2xl sm:rounded-[2.5rem] border border-border overflow-hidden shadow-2xl mb-6 sm:mb-10 opacity-70">
+        <div className="relative z-10 p-4 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-10">
+          <div className="flex-1 space-y-2 md:space-y-4 text-center md:text-left">
+            <h1 className="text-xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
+              HEJ, {name}! 👋
+            </h1>
+            <div className="h-4 w-48 bg-secondary rounded animate-pulse mx-auto md:mx-0 mt-2"></div>
+            <div className="h-6 w-32 bg-secondary rounded-full animate-pulse mx-auto md:mx-0 mt-4"></div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 w-full md:w-auto">
+            <div className="bg-secondary/50 p-3 md:p-6 rounded-xl md:rounded-3xl border border-border/50 h-24 w-28 md:w-36 animate-pulse"></div>
+            <div className="bg-secondary/50 p-3 md:p-6 rounded-xl md:rounded-3xl border border-border/50 h-24 w-28 md:w-36 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
+        <p className="text-sm font-black uppercase tracking-widest animate-pulse">Laddar din data...</p>
+      </div>
+    </>
+  );
+}
+
+// HUVUDKOMPONENT
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect('/login');
+  }
+
+  const firstName = session.user.name?.split(' ')[0].toUpperCase() || '';
+
+  return (
+    <div className="py-4 px-3 sm:py-6 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <DashboardTour />
+      {/* 
+        Vi renderar en Skeleton först så användaren direkt känner att sidan har laddat. 
+        Under huven körs DashboardContent, och när databasen är redo (ca 100-300ms) byts det ut. 
+      */}
+      <Suspense fallback={<DashboardSkeleton name={firstName} />}>
+        <DashboardContent session={session} />
+      </Suspense>
     </div>
   );
 }

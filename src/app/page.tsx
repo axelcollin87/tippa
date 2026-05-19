@@ -20,6 +20,7 @@ import InfoPopover from '@/components/InfoPopover';
 import DashboardTour from '@/components/DashboardTour';
 import { getPotentialWinningsForSign } from '@/lib/scoring';
 import Scoreboard from '@/components/Scoreboard';
+import UsernamePromptModal from '@/components/UsernamePromptModal';
 
 // -- DEL-KOMPONENTER FÖR SUSPENSE --
 
@@ -122,6 +123,9 @@ async function DashboardContent({ session }: { session: any }) {
 
   const anyGroupMatchesLeft = allMatchesWithBets.some((m) => m.groupName && !m.isCompleted);
 
+  const firstMatch = allMatchesWithBets[0];
+  const tournamentStarted = firstMatch && new Date() >= new Date(firstMatch.kickoff);
+
   const missingBetsCount = allMatchesWithBets.filter((m) => {
     const isMissing = !userBets.some((b) => b.matchId === m.id);
     const lockTime = new Date(m.kickoff.getTime() - 60 * 60 * 1000);
@@ -156,19 +160,26 @@ async function DashboardContent({ session }: { session: any }) {
             <h1 className="text-xl md:text-5xl font-black text-foreground tracking-tighter leading-none">
               HEJ, {session.user.name?.split(' ')[0].toUpperCase()}! 👋
             </h1>
-            <p className="text-foreground/90 text-xs md:text-base font-medium max-w-md mx-auto md:mx-0">
-              Välkommen tillbaka till Tippwits. Just nu ligger du på plats{' '}
-              <b className="text-primary">#{globalRank}</b> i den globala ligan.
-            </p>
+            
+            {tournamentStarted ? (
+              <p className="text-foreground/90 text-xs md:text-base font-medium max-w-md mx-auto md:mx-0">
+                Välkommen tillbaka till Tippwits. Just nu ligger du på plats{' '}
+                <b className="text-primary">#{globalRank}</b> i den globala ligan.
+              </p>
+            ) : (
+              <p className="text-foreground/90 text-xs md:text-base font-medium max-w-md mx-auto md:mx-0">
+                Välkommen till Tippwits! Turneringen har inte börjat än. Se till att du har fyllt i alla dina tips innan premiären!
+              </p>
+            )}
 
             {missingBetsCount > 0 ? (
               <Link
                 href="/bets"
-                className="text-[10px] font-black uppercase hover:underline tracking-widest"
+                className="text-[10px] font-black uppercase hover:underline tracking-widest inline-block"
               >
                 <div className="inline-flex items-center gap-1.5 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">  
                   <AlertCircle size={12} />
-                  {missingBetsCount} otippade kvar!
+                  {missingBetsCount} otippade kvar - Tippa nu!
                 </div>
               </Link>
             ) : (
@@ -407,6 +418,7 @@ export default async function Home() {
       <Suspense fallback={<DashboardSkeleton name={firstName} />}>
         <DashboardContent session={session} />
       </Suspense>
+      <UsernamePromptModal currentName={session.user.name || ''} />
     </div>
   );
 }

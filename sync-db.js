@@ -39,7 +39,7 @@ try {
 
   // 2. Dumpa data från produktion via docker pg_dump
   console.log("📦 Laddar ner data från produktion (detta raderar inget på live-servern)...");
-  const dumpCmd = `docker run --rm postgres:15-alpine pg_dump "${LIVE_DB_URL}" --schema=public --clean --if-exists --no-owner --no-privileges`;
+  const dumpCmd = `docker run --rm postgres:17-alpine pg_dump "${LIVE_DB_URL}" --schema=public --clean --if-exists --no-owner --no-privileges`;
   const dumpOutput = execSync(dumpCmd, { maxBuffer: 1024 * 1024 * 100 }); // Upp till 100MB output
   fs.writeFileSync(DUMP_FILE, dumpOutput);
   console.log("✅ Nedladdning klar.");

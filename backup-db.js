@@ -41,7 +41,7 @@ try {
   console.log(`💾 Skapar backup via Docker: ${filename} ...`);
   
   // Kör pg_dump via den docker-image vi redan har, läs in stdout till Node
-  const cmd = `docker run --rm postgres:15-alpine pg_dump "${LIVE_DB_URL}" --schema=public --no-owner --no-privileges`;
+  const cmd = `docker run --rm postgres:17-alpine pg_dump "${LIVE_DB_URL}" --schema=public --no-owner --no-privileges`;
   const output = execSync(cmd, { maxBuffer: 1024 * 1024 * 100 }); // Upp till 100MB output
   
   // Skriv filen via Node istället för shell (säkrare i Windows)

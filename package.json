@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "db:sync": "bash sync-db.sh",
-    "db:backup": "bash backup-db.sh"
+    "db:sync": "node sync-db.js",
+    "db:backup": "node backup-db.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -36,6 +36,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "git-format-staged": "^4.0.1",

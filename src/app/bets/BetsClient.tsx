@@ -291,9 +291,9 @@ export default function BetsClient({
                 </InfoPopover>
                 {activeGroup && groupLockTimes[activeGroup] && (
                   <div className="ml-2 md:ml-4 flex items-center gap-2">
-                    {new Date() < groupLockTimes[activeGroup] ? (
+                    {new Date() < new Date(new Date(groupLockTimes[activeGroup]).getTime() - 60 * 60 * 1000) ? (
                       <Countdown
-                        targetDate={groupLockTimes[activeGroup]}
+                        targetDate={new Date(groupLockTimes[activeGroup])}
                         label="låses"
                       />
                     ) : (
@@ -311,7 +311,9 @@ export default function BetsClient({
               teams={activeTeams}
               initialPlacements={activeUserRanks}
               isLocked={
-                activeGroup ? new Date() > groupLockTimes[activeGroup] : false
+                activeGroup
+                  ? new Date() > new Date(new Date(groupLockTimes[activeGroup]).getTime() - 60 * 60 * 1000)
+                  : false
               }
               officialStandings={activeOfficialStandings}
             />

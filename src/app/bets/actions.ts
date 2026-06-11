@@ -190,16 +190,17 @@ export async function saveGroupPlacement(
     }
   }
 
-  // Kolla låsning dynamiskt baserat på första match i gruppen
+  // Kolla låsning dynamiskt baserat på första match i gruppen (1 timme före kickoff)
   const firstMatchInGroup = await prisma.match.findFirst({
     where: { groupName: groupName },
     orderBy: { kickoff: 'asc' },
   });
 
   if (firstMatchInGroup) {
-    if (new Date() >= firstMatchInGroup.kickoff) {
+    const lockTime = new Date(firstMatchInGroup.kickoff.getTime() - 60 * 60 * 1000);
+    if (new Date() >= lockTime) {
       throw new Error(
-        'Gruppen är låst för tippning då dess matcher har startat!'
+        'Gruppen är låst för tippning. Du måste spara dina val senast 1 timme innan gruppens första match startar!'
       );
     }
   }

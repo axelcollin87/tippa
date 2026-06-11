@@ -119,10 +119,10 @@ export default async function UserProfilePage(props: {
     where: { userId: user.id },
     orderBy: [{ groupName: 'asc' }, { predictedRank: 'asc' }],
   });
-  // Visas endast om gruppens specifika första match har startat
+  // Visas endast om gruppens tips är låsta (1 timme före första matchen)
   const lockedGroupBets = allGroupBets.filter((bet) => {
-    const lockTime = groupLockTimes[bet.groupName];
-    return lockTime && now >= new Date(lockTime);
+    const kickoffTime = groupLockTimes[bet.groupName];
+    return kickoffTime && now >= new Date(kickoffTime.getTime() - 60 * 60 * 1000);
   });
 
   const isMe = session.user.id === user.id;

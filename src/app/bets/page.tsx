@@ -43,9 +43,7 @@ export default async function BetsPage(props: {
   const groupLockTimes: Record<string, Date> = {};
   for (const match of allMatches) {
     if (match.groupName && !groupLockTimes[match.groupName]) {
-      groupLockTimes[match.groupName] = new Date(
-        match.kickoff.getTime() - 60 * 60 * 1000
-      );
+      groupLockTimes[match.groupName] = match.kickoff;
     }
   }
 

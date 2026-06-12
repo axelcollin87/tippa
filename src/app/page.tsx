@@ -113,8 +113,10 @@ async function DashboardContent({ session }: { session: any }) {
     .filter((m) => new Date(m.kickoff.getTime() - 60 * 60 * 1000) > now && !m.isCompleted)
     .slice(0, 4);
 
+  // En match räknas som aktiv/live i max 3 timmar (180 minuter) efter kickoff
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
   const activeMatches = allMatchesWithBets.filter(
-    (m) => new Date(m.kickoff) <= now && !m.isCompleted
+    (m) => new Date(m.kickoff) <= now && new Date(m.kickoff) >= threeHoursAgo && !m.isCompleted
   );
 
   const activeMatchesWithData = await Promise.all(

@@ -86,7 +86,7 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
                 </span>
               </div>
               
-              {matchData.stage !== 'Group' && matchData.myBet.predictedWinner && (
+              {!matchData.groupName && matchData.myBet.predictedWinner && (
                 <div className="flex flex-col items-end gap-0.5 md:gap-1 border-t border-border pt-1">
                   <div className="text-[8px] md:text-[10px] font-black text-primary px-1.5 md:px-2 bg-primary/10 rounded">
                     {matchData.myBet.predictedWinner.toUpperCase()} VIDARE
@@ -151,7 +151,7 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
             </div>
           </div>
 
-          {matchData.stage !== 'Group' && (
+          {!matchData.groupName && (
              <div className="pt-3 md:pt-4 border-t border-border">
                 <h5 className="text-[9px] md:text-[10px] font-black text-center uppercase tracking-[0.2em] mb-2 md:mb-4 text-primary">Avancemang</h5>
                 <div className="grid grid-cols-2 gap-4 md:gap-8">

@@ -5,6 +5,7 @@ import { saveGroupPlacement } from '@/app/bets/actions';
 import TeamBadge from './TeamBadge';
 import { ChevronUp, ChevronDown, Save, Lock, Trophy } from 'lucide-react';
 import { getTeamInfo } from '@/lib/teams';
+import { useToast } from './Toast';
 
 interface Props {
   groupName: string;
@@ -24,6 +25,7 @@ export default function GroupRanking({
   const [placements, setPlacements] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string[]>([]);
+  const { toast } = useToast();
 
   const isFinalized = officialStandings.length === 4;
 
@@ -63,9 +65,10 @@ export default function GroupRanking({
     try {
       await saveGroupPlacement(groupName, placements);
       setLastSaved(placements);
+      toast(`Dina placeringstips för Grupp ${groupName} har sparats!`);
     } catch (error) {
       console.error(error);
-      alert('Kunde inte spara placeringar');
+      toast(error instanceof Error ? error.message : 'Kunde inte spara placeringar', 'error');
     } finally {
       setIsSaving(false);
     }

@@ -3,25 +3,27 @@
 import { useState } from 'react';
 import { saveCrystalBallBet } from '@/app/bets/actions';
 import { Save, Lock, CheckCircle2, Trophy, Medal } from 'lucide-react';
+import { useToast } from '@/components/Toast';
 
 interface Team {
   name: string;
 }
 
-export default function CrystalBallQuestion({ 
-  question, 
-  userBet, 
+export default function CrystalBallQuestion({
+  question,
+  userBet,
   allTeams,
   isLocked: externalIsLocked
-}: { 
-  question: any, 
-  userBet: any, 
+}: {
+  question: any,
+  userBet: any,
   allTeams: { english: string, swedish: string }[],
   isLocked?: boolean
 }) {
   const [answer, setAnswer] = useState(userBet?.answer || '');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { toast } = useToast();
 
   const now = new Date();
   const isLocked = externalIsLocked !== undefined ? externalIsLocked : now > new Date(question.lockedAt);
@@ -39,10 +41,11 @@ export default function CrystalBallQuestion({
     try {
       await saveCrystalBallBet(formData);
       setShowSuccess(true);
+      toast(`Ditt tips på "${question.question}" har sparats!`);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
       console.error(err);
-      alert('Kunde inte spara tipset.');
+      toast(err instanceof Error ? err.message : 'Kunde inte spara tipset.', 'error');
     } finally {
       setIsSaving(false);
     }

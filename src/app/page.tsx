@@ -21,6 +21,7 @@ import DashboardTour from '@/components/DashboardTour';
 import { getPotentialWinningsForSign } from '@/lib/scoring';
 import Scoreboard from '@/components/Scoreboard';
 import UsernamePromptModal from '@/components/UsernamePromptModal';
+import MatchCard from '@/components/MatchCard';
 
 // -- DEL-KOMPONENTER FÖR SUSPENSE --
 
@@ -269,47 +270,13 @@ async function DashboardContent({ session }: { session: any }) {
               {upcomingMatches.length > 0 ? (
                 upcomingMatches.map((match) => {
                   const myBet = userBets.find((b) => b.matchId === match.id);
-                  const href = `/bets?${match.groupName ? `group=${match.groupName}` : 'view=knockout'}#match-${match.id}`;
-
                   return (
-                    <Link
+                    <MatchCard
                       key={match.id}
-                      href={href}
-                      className="bg-card border border-border rounded-2xl md:rounded-3xl p-4 md:p-5 flex items-center justify-between group hover:border-primary/50 transition-all hover:shadow-lg"
-                    >
-                      <div className="space-y-2 md:space-y-3">
-                        <div className="flex items-center gap-2 md:gap-3">
-                          <span className="text-[9px] md:text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase tracking-widest">
-                            {match.groupName ? `Grupp ${match.groupName}` : match.stage}
-                          </span>
-                          <Countdown targetDate={match.kickoff} />
-                        </div>
-                        <div className="text-lg md:text-xl font-black text-foreground flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
-                          <TeamBadge teamName={match.homeTeam} className="text-md md:text-lg" />
-                          <span className="text-muted-foreground text-[10px] font-medium uppercase opacity-30 hidden sm:inline">
-                            vs
-                          </span>
-                          <TeamBadge teamName={match.awayTeam} className="text-md md:text-lg" />
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        {myBet ? (
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
-                              Tips
-                            </span>
-                            <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-black text-lg md:text-xl shadow-lg shadow-primary/20">
-                              {myBet.predictedSign}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-destructive text-destructive-foreground px-5 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest group-hover:scale-105 transition-transform">
-                            Tippa
-                          </div>
-                        )}
-                      </div>
-                    </Link>
+                      match={match}
+                      userBet={myBet}
+                      isCompact={true}
+                    />
                   );
                 })
               ) : (

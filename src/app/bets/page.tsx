@@ -15,8 +15,8 @@ export default async function BetsPage(props: {
   }
 
   const searchParams = await props.searchParams;
-  const initialView = searchParams.view || 'group';
   const initialGroup = searchParams.group || null;
+  const initialView = searchParams.view || (initialGroup ? 'group' : 'knockout');
   const initialStage = searchParams.stage || 'r32';
 
   const [

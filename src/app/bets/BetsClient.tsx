@@ -1,13 +1,76 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GroupRanking from '@/components/GroupRanking';
 import Countdown from '@/components/Countdown';
 import InfoPopover from '@/components/InfoPopover';
-import { Lock } from 'lucide-react';
+import { Lock, LayoutGrid, List } from 'lucide-react';
 import { STAGE_TRANSLATIONS } from '@/lib/teams';
 import MatchCard from '@/components/MatchCard';
 import CrystalBallQuestion from './CrystalBallQuestion';
+import TeamBadge from '@/components/TeamBadge';
+
+function TreeNodeCard({ match }: { match: any }) {
+  const bet = match.bets[0];
+  const predictedWinner = bet?.predictedWinner;
+  const actualWinner = match.actualWinner;
+
+  const isHomeWinnerPredicted = predictedWinner === match.homeTeam;
+  const isAwayWinnerPredicted = predictedWinner === match.awayTeam;
+
+  const isHomeActualWinner = actualWinner === match.homeTeam;
+  const isAwayActualWinner = actualWinner === match.awayTeam;
+
+  return (
+    <div className="bg-card border border-border p-2.5 rounded-xl shadow-sm flex flex-col gap-1.5 w-full max-w-[260px] shrink-0 text-xs transition-all hover:border-primary/40 hover:shadow-md">
+      {/* Match number and date */}
+      <div className="flex items-center justify-between text-[8px] font-black text-muted-foreground uppercase border-b border-border/40 pb-1">
+        <span>Match {match.id}</span>
+        <span>
+          {new Date(match.kickoff).toLocaleDateString('sv-SE', {
+            day: 'numeric',
+            month: 'short',
+          })}
+        </span>
+      </div>
+
+      {/* Teams list */}
+      <div className="space-y-1">
+        {/* Home Team */}
+        <div className={`flex items-center justify-between p-1 rounded transition-colors ${isHomeWinnerPredicted ? 'bg-primary/5 font-extrabold text-primary' : 'text-foreground'}`}>
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <TeamBadge teamName={match.homeTeam} className="text-xs font-semibold gap-1.5" />
+            {isHomeWinnerPredicted && (
+              <span className="text-[7px] bg-primary/20 text-primary px-1 rounded uppercase tracking-tighter shrink-0 font-black">TIP</span>
+            )}
+            {isHomeActualWinner && match.isCompleted && (
+              <span className="text-[7px] bg-green-500 text-white px-1 rounded uppercase tracking-tighter shrink-0 font-black">VIN</span>
+            )}
+          </div>
+          {match.isCompleted && (
+            <span className="font-bold">{match.homeScore}</span>
+          )}
+        </div>
+
+        {/* Away Team */}
+        <div className={`flex items-center justify-between p-1 rounded transition-colors ${isAwayWinnerPredicted ? 'bg-primary/5 font-extrabold text-primary' : 'text-foreground'}`}>
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <TeamBadge teamName={match.awayTeam} className="text-xs font-semibold gap-1.5" />
+            {isAwayWinnerPredicted && (
+              <span className="text-[7px] bg-primary/20 text-primary px-1 rounded uppercase tracking-tighter shrink-0 font-black">TIP</span>
+            )}
+            {isAwayActualWinner && match.isCompleted && (
+              <span className="text-[7px] bg-green-500 text-white px-1 rounded uppercase tracking-tighter shrink-0 font-black">VIN</span>
+            )}
+          </div>
+          {match.isCompleted && (
+            <span className="font-bold">{match.awayScore}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type BetsClientProps = {
   initialView: string;
@@ -60,9 +123,27 @@ export default function BetsClient({
   );
   const [activeKnockoutStageId, setActiveKnockoutStageId] =
     useState(initialStage);
+  const [layout, setLayout] = useState<'list' | 'grid'>('list');
+  const [knockoutView, setKnockoutView] = useState<'matches' | 'tree'>('matches');
+
+  const [isRulesCollapsed, setIsRulesCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('tippwits_knockout_rules_collapsed');
+    if (saved === 'true') {
+      setIsRulesCollapsed(true);
+    }
+  }, []);
+
+  const handleToggleRules = () => {
+    const newVal = !isRulesCollapsed;
+    setIsRulesCollapsed(newVal);
+    localStorage.setItem('tippwits_knockout_rules_collapsed', String(newVal));
+  };
 
   const isKnockoutView = view === 'knockout';
   const isCrystalBallView = view === 'crystalball';
+  const isGroupView = view === 'group';
 
   const isTournamentStarted = firstMatchKickoff ? new Date() >= firstMatchKickoff : false;
 
@@ -137,33 +218,16 @@ export default function BetsClient({
 
           <div className="w-px h-6 bg-border mx-1 md:mx-2"></div>
 
-          {groupNames.map((g) => {
-            const status = groupStatus[g];
-            let statusBorder = 'border-border';
-            if (status === 'completed')
-              statusBorder =
-                'border-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]';
-            else if (status === 'started')
-              statusBorder =
-                'border-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.3)]';
-            else
-              statusBorder =
-                'border-destructive shadow-[0_0_8px_rgba(239,68,68,0.3)]';
-
-            return (
-              <button
-                key={g}
-                onClick={() => handleTabClick('group', g)}
-                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${statusBorder} ${
-                  activeGroup === g && !isCrystalBallView && !isKnockoutView
-                    ? 'bg-primary/80 text-background scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
-                    : 'bg-card text-muted-foreground hover:bg-secondary'
-                }`}
-              >
-                Grupp {g}
-              </button>
-            );
-          })}
+          <button
+            onClick={() => handleTabClick('group', activeGroup || 'A')}
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-xs transition-all uppercase tracking-tighter border-2 ${
+              isGroupView
+                ? 'bg-primary/80 text-background scale-105 border-primary shadow-[0_0_15px_rgba(var(--primary),0.4)]'
+                : 'bg-card text-muted-foreground hover:bg-secondary border-border'
+            }`}
+          >
+            GRUPPSPEL
+          </button>
 
           <div className="w-px h-6 bg-border mx-1 md:mx-2"></div>
 
@@ -180,6 +244,38 @@ export default function BetsClient({
             </button>
           )}
         </div>
+
+        {isGroupView && (
+          <div className="flex flex-wrap gap-1.5 md:gap-2 pt-2 items-center">
+            {groupNames.map((g) => {
+              const status = groupStatus[g];
+              let statusBorder = 'border-border';
+              if (status === 'completed')
+                statusBorder =
+                  'border-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]';
+              else if (status === 'started')
+                statusBorder =
+                  'border-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.3)]';
+              else
+                statusBorder =
+                  'border-destructive shadow-[0_0_8px_rgba(239,68,68,0.3)]';
+
+              return (
+                <button
+                  key={g}
+                  onClick={() => handleTabClick('group', g)}
+                  className={`px-3 md:px-4 py-1 md:py-1.5 rounded-full font-black text-[8px] md:text-[10px] transition-all uppercase tracking-widest border ${statusBorder} ${
+                    activeGroup === g
+                      ? 'bg-primary/20 text-primary border-primary shadow-[0_0_10px_rgba(var(--primary),0.2)] opacity-100'
+                      : 'bg-card text-muted-foreground hover:bg-secondary'
+                  }`}
+                >
+                  Grupp {g}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {isKnockoutView && (
           <div className="flex flex-wrap gap-1.5 md:gap-2 pt-2 items-center">
@@ -320,22 +416,43 @@ export default function BetsClient({
           </section>
 
           <section className="space-y-4 md:space-y-6 pt-2 md:pt-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg md:text-xl font-black text-foreground uppercase tracking-widest">
-                Matcher
-              </h2>
-              <span className="text-[9px] md:text-[10px] font-black bg-secondary text-muted-foreground px-2 py-1 rounded">
-                100p maxpoäng
-              </span>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg md:text-xl font-black text-foreground uppercase tracking-widest">
+                  Matcher
+                </h2>
+                <span className="text-[9px] md:text-[10px] font-black bg-secondary text-muted-foreground px-2 py-1 rounded">
+                  100p maxpoäng
+                </span>
+              </div>
+              
+              {/* Layout Toggle */}
+              <div className="flex items-center bg-secondary/30 p-1 rounded-lg border border-border shrink-0">
+                <button
+                  onClick={() => setLayout('list')}
+                  className={`p-1.5 rounded-md transition-all ${layout === 'list' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  title="Lista"
+                >
+                  <List size={14} />
+                </button>
+                <button
+                  onClick={() => setLayout('grid')}
+                  className={`p-1.5 rounded-md transition-all ${layout === 'grid' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  title="Rutnät (Kompakt)"
+                >
+                  <LayoutGrid size={14} />
+                </button>
+              </div>
             </div>
-            <div className="grid gap-3 md:gap-4">
+
+            <div className={layout === 'grid' ? "grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:gap-4"}>
               {activeMatches.map((match) => (
                 <div
                   key={match.id}
                   id={`match-${match.id}`}
                   className="scroll-mt-24"
                 >
-                  <MatchCard match={match} userBet={match.bets[0]} />
+                  <MatchCard match={match} userBet={match.bets[0]} isCompact={layout === 'grid'} />
                 </div>
               ))}
             </div>
@@ -343,13 +460,108 @@ export default function BetsClient({
         </>
       ) : isKnockoutView ? (
         <section className="space-y-4 md:space-y-6">
-          <div className="">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-3 gap-3">
             <div>
               <h1 className="text-2xl md:text-4xl font-black text-primary uppercase tracking-widest">
                 SLUTSPEL
               </h1>
             </div>
+
+            {/* Sub-view selection and layout toggle */}
+            {isGroupStageFinished && (
+              <div className="flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto">
+                <div className="flex gap-1.5 bg-secondary/20 p-1 rounded-xl border border-border">
+                  <button
+                    onClick={() => setKnockoutView('matches')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider transition-all ${
+                      knockoutView === 'matches'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Tippa Matcher
+                  </button>
+                  <button
+                    onClick={() => setKnockoutView('tree')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider transition-all ${
+                      knockoutView === 'tree'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Slutspelsträd 🌲
+                  </button>
+                </div>
+
+                {knockoutView === 'matches' && (
+                  <div className="flex items-center bg-secondary/30 p-1 rounded-lg border border-border shrink-0">
+                    <button
+                      onClick={() => setLayout('list')}
+                      className={`p-1.5 rounded-md transition-all ${layout === 'list' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      title="Lista"
+                    >
+                      <List size={14} />
+                    </button>
+                    <button
+                      onClick={() => setLayout('grid')}
+                      className={`p-1.5 rounded-md transition-all ${layout === 'grid' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      title="Rutnät (Kompakt)"
+                    >
+                      <LayoutGrid size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {isGroupStageFinished && knockoutView === 'matches' && (
+            isRulesCollapsed ? (
+              <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl flex items-center justify-between text-xs text-muted-foreground transition-all">
+                <div className="flex items-center gap-2">
+                  <span className="text-primary font-black text-[9px] bg-primary/10 px-1.5 py-0.5 rounded tracking-wider uppercase">INFO</span>
+                  <span className="font-semibold text-foreground flex items-center gap-1">💡 Slutspelsregler — Viktigt att veta!</span>
+                </div>
+                <button
+                  onClick={handleToggleRules}
+                  className="text-primary hover:underline font-bold text-[10px] uppercase tracking-wider cursor-pointer"
+                >
+                  Visa regler &rarr;
+                </button>
+              </div>
+            ) : (
+              <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl md:rounded-2xl space-y-3 relative overflow-hidden transition-all">
+                <div className="flex items-center justify-between border-b border-primary/10 pb-2">
+                  <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    💡 Slutspelsregler — Viktigt att veta!
+                  </h2>
+                  <button
+                    onClick={handleToggleRules}
+                    className="text-muted-foreground hover:text-foreground font-bold text-[10px] uppercase tracking-wider border border-border bg-background px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                  >
+                    Minimera
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  I slutspelet tippar du <strong>både</strong> resultatet efter full tid (90 minuter) 
+                  <strong> och</strong> vilket lag som slutligen går vidare.
+                </p>
+                <ul className="list-disc pl-4 text-[11px] text-muted-foreground space-y-1">
+                  <li><strong>Full tid (1X2):</strong> Om du tror matchen avgörs under ordinarie 90 minuter väljer du <strong>1</strong> (hemma) eller <strong>2</strong> (borta). Om du tror på förlängning/straffar väljer du <strong>X</strong> (oavgjort).</li>
+                  <li><strong>Vem går vidare?:</strong> Välj det lag som slutligen avancerar till nästa runda. Det är helt tillåtet att tippa <strong>mot ditt eget resultat</strong> (t.ex. tippa 1 full tid, men att bortalaget ändå tar sig vidare).</li>
+                </ul>
+                
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={handleToggleRules}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-black text-[9px] uppercase tracking-widest px-4 py-2 rounded-lg shadow-sm transition-all cursor-pointer"
+                  >
+                    Jag förstår 👍
+                  </button>
+                </div>
+              </div>
+            )
+          )}
 
           {!isGroupStageFinished ? (
             <div className="text-center py-10 md:py-20 text-muted-foreground border border-dashed border-border rounded-xl md:rounded-2xl flex flex-col items-center gap-3">
@@ -357,6 +569,105 @@ export default function BetsClient({
               <p className="font-bold text-sm">
                 Denna del öppnar när hela gruppspelet är avslutat.
               </p>
+            </div>
+          ) : knockoutView === 'tree' ? (
+            <div className="space-y-4">
+              <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl text-xs text-muted-foreground leading-relaxed flex items-center gap-2">
+                <span>💡</span>
+                <span><strong>Svep i sidled (vänster/höger)</strong> för att följa trädet från 16-delsfinalerna hela vägen till finalen! Matcherna listas i ordning.</span>
+              </div>
+
+              <div className="flex gap-4 md:gap-6 overflow-x-auto snap-x scroll-smooth pb-6 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+                {/* 16-delsfinaler */}
+                {knockoutMatches.filter((m) => m.stage === 'Round of 32').length > 0 && (
+                  <div className="flex-shrink-0 w-[85vw] sm:w-[280px] snap-center flex flex-col gap-3">
+                    <h4 className="text-xs font-black text-foreground uppercase border-b border-border pb-1.5 mb-2 sticky top-0 bg-background/95 backdrop-blur z-10 flex justify-between items-center shrink-0">
+                      <span>16-delsfinal</span>
+                      <span className="text-[9px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded font-black">16 Matcher</span>
+                    </h4>
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] pr-1 scrollbar-thin">
+                      {knockoutMatches
+                        .filter((m) => m.stage === 'Round of 32')
+                        .sort((a, b) => parseInt(a.id) - parseInt(b.id))
+                        .map((m) => (
+                          <TreeNodeCard key={m.id} match={m} />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Åttondelsfinaler */}
+                {knockoutMatches.filter((m) => m.stage === 'Round of 16').length > 0 && (
+                  <div className="flex-shrink-0 w-[85vw] sm:w-[280px] snap-center flex flex-col gap-3">
+                    <h4 className="text-xs font-black text-foreground uppercase border-b border-border pb-1.5 mb-2 sticky top-0 bg-background/95 backdrop-blur z-10 flex justify-between items-center shrink-0">
+                      <span>Åttondelsfinal</span>
+                      <span className="text-[9px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded font-black">8 Matcher</span>
+                    </h4>
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] pr-1 scrollbar-thin">
+                      {knockoutMatches
+                        .filter((m) => m.stage === 'Round of 16')
+                        .sort((a, b) => parseInt(a.id) - parseInt(b.id))
+                        .map((m) => (
+                          <TreeNodeCard key={m.id} match={m} />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Kvartsfinaler */}
+                {knockoutMatches.filter((m) => m.stage === 'Quarter-final').length > 0 && (
+                  <div className="flex-shrink-0 w-[85vw] sm:w-[280px] snap-center flex flex-col gap-3">
+                    <h4 className="text-xs font-black text-foreground uppercase border-b border-border pb-1.5 mb-2 sticky top-0 bg-background/95 backdrop-blur z-10 flex justify-between items-center shrink-0">
+                      <span>Kvartsfinal</span>
+                      <span className="text-[9px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded font-black">4 Matcher</span>
+                    </h4>
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] pr-1 scrollbar-thin">
+                      {knockoutMatches
+                        .filter((m) => m.stage === 'Quarter-final')
+                        .sort((a, b) => parseInt(a.id) - parseInt(b.id))
+                        .map((m) => (
+                          <TreeNodeCard key={m.id} match={m} />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Semifinaler */}
+                {knockoutMatches.filter((m) => m.stage === 'Semi-final').length > 0 && (
+                  <div className="flex-shrink-0 w-[85vw] sm:w-[280px] snap-center flex flex-col gap-3">
+                    <h4 className="text-xs font-black text-foreground uppercase border-b border-border pb-1.5 mb-2 sticky top-0 bg-background/95 backdrop-blur z-10 flex justify-between items-center shrink-0">
+                      <span>Semifinal</span>
+                      <span className="text-[9px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded font-black">2 Matcher</span>
+                    </h4>
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] pr-1 scrollbar-thin">
+                      {knockoutMatches
+                        .filter((m) => m.stage === 'Semi-final')
+                        .sort((a, b) => parseInt(a.id) - parseInt(b.id))
+                        .map((m) => (
+                          <TreeNodeCard key={m.id} match={m} />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Finaler */}
+                {knockoutMatches.filter((m) => m.stage === 'Final' || m.stage === '3rd Place').length > 0 && (
+                  <div className="flex-shrink-0 w-[85vw] sm:w-[280px] snap-center flex flex-col gap-3">
+                    <h4 className="text-xs font-black text-foreground uppercase border-b border-border pb-1.5 mb-2 sticky top-0 bg-background/95 backdrop-blur z-10 flex justify-between items-center shrink-0">
+                      <span>Finaler</span>
+                      <span className="text-[9px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded font-black">Guld & Brons</span>
+                    </h4>
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] pr-1 scrollbar-thin">
+                      {knockoutMatches
+                        .filter((m) => m.stage === 'Final' || m.stage === '3rd Place')
+                        .sort((a, _b) => (a.stage === 'Final' ? 1 : -1))
+                        .map((m) => (
+                          <TreeNodeCard key={m.id} match={m} />
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="grid gap-3 md:gap-4">
@@ -416,13 +727,16 @@ export default function BetsClient({
                           </p>
                         </div>
                       ) : (
-                        knockoutStages[stage].map((match) => (
-                          <MatchCard
-                            key={match.id}
-                            match={match}
-                            userBet={match.bets[0]}
-                          />
-                        ))
+                        <div className={layout === 'grid' ? "grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:gap-4"}>
+                          {knockoutStages[stage].map((match) => (
+                            <MatchCard
+                              key={match.id}
+                              match={match}
+                              userBet={match.bets[0]}
+                              isCompact={layout === 'grid'}
+                            />
+                          ))}
+                        </div>
                       )}
                     </div>
                   );

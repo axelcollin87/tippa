@@ -76,7 +76,7 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
               <div className="flex flex-col items-end gap-1">
                 <div className="flex gap-1 justify-end">
                   {['1', 'X', '2'].map((sign) => (
-                    <div key={sign} className={`w-6 h-6 md:w-7 md:h-7 rounded md:rounded-md flex items-center justify-center font-black text-[10px] md:text-xs transition-all ${matchData.myBet?.predictedSign === sign ? 'bg-primary text-primary-foreground shadow-[0_0_10px_rgba(var(--primary),0.4)]' : 'bg-secondary text-secondary-foreground/30 border border-border/50'}`}>
+                    <div key={sign} className={`w-5 h-5 md:w-7 md:h-7 rounded flex md:rounded-md items-center justify-center font-black text-[9px] md:text-xs transition-all ${matchData.myBet?.predictedSign === sign ? 'bg-primary text-primary-foreground shadow-[0_0_10px_rgba(var(--primary),0.4)]' : 'bg-secondary text-secondary-foreground/30 border border-border/50'}`}>
                       {sign}
                     </div>
                   ))}

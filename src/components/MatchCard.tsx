@@ -55,6 +55,8 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
   const pointsEarned = userBet
     ? userBet.pointsAwarded + userBet.pointsAwardedProgress
     : 0;
+  const pointsSign = userBet?.pointsAwarded ?? 0;
+  const pointsWinner = isKnockout ? (userBet?.pointsAwardedProgress ?? 0) : 0;
 
   // Bestäm färg och text för färdigspelad match
   let badgeText = '';
@@ -249,8 +251,13 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
         <div className={`flex flex-col ${isCompact ? 'gap-2' : 'gap-3 md:gap-4'} w-full`}>
           <div className="flex flex-col items-center gap-1">
             {isKnockout && (
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">
-                Full tid (90 min)
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <span>Full tid (90 min)</span>
+                {match.isCompleted && (
+                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${pointsSign > 0 ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-secondary text-muted-foreground opacity-60'}`}>
+                    {pointsSign > 0 ? `+${pointsSign}P` : '0P'}
+                  </span>
+                )}
               </span>
             )}
             <div className={`flex gap-1.5 ${isCompact ? '' : 'md:gap-2'} w-full ${isCompact ? '' : 'md:w-auto'}`}>
@@ -302,8 +309,13 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
           {isKnockout && (
             <div className={`flex flex-col items-center gap-1 border-t border-border ${isCompact ? 'pt-1.5' : 'pt-2 md:pt-3'}`}>
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest">
-                  Vem går vidare?
+                <span className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
+                  <span>Vem går vidare?</span>
+                  {match.isCompleted && (
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${pointsWinner > 0 ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-secondary text-muted-foreground opacity-60'}`}>
+                      {pointsWinner > 0 ? `+${pointsWinner}P` : '0P'}
+                    </span>
+                  )}
                 </span>
                 <InfoPopover title="Slutspelsregler">
                   <p>

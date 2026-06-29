@@ -46,7 +46,7 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
         href={`/bets?${matchData.groupName ? `group=${matchData.groupName}` : 'view=knockout'}#match-${matchData.id}`}
         className="p-2 md:p-3 flex items-center justify-between group hover:bg-green-500/5 transition-colors"
       >
-        <div className="space-y-1 flex-1">
+        <div className="space-y-1 flex-1 min-w-0 mr-3">
           <div className="flex flex-col gap-1 items-start">
             <div className="flex items-center gap-2">
               <span className="text-[9px] md:text-[10px] font-black bg-secondary px-2 py-0.5 rounded text-muted-foreground uppercase">
@@ -55,7 +55,7 @@ export default function LiveMatchCard({ matchData }: LiveMatchCardProps) {
               <span className="text-[10px] md:text-xs font-bold text-green-500 uppercase animate-pulse">LIVE</span>
             </div>
           </div>
-          <div className="text-md md:text-lg font-bold text-foreground mt-1 md:mt-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+          <div className="text-md md:text-lg font-bold text-foreground mt-1 md:mt-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 min-w-0 w-full">
             <TeamBadge teamName={matchData.homeTeam} className="text-sm md:text-base" />
             <span className="text-muted-foreground font-normal text-[10px] uppercase hidden sm:inline">vs</span>
             <TeamBadge teamName={matchData.awayTeam} className="text-sm md:text-base" />

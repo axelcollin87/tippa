@@ -10,7 +10,7 @@ export default function TeamBadge({ teamName, className = "", reversed = false }
   const { name, flagUrl } = getTeamInfo(teamName);
 
   return (
-    <div className={`flex items-center gap-2 ${reversed ? "flex-row-reverse" : "flex-row"} ${className}`}>
+    <div className={`flex items-center gap-2 ${reversed ? "flex-row-reverse" : "flex-row"} min-w-0 ${className}`}>
       {flagUrl ? (
         <img 
           src={flagUrl} 

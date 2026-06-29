@@ -384,10 +384,27 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
         </div>
 
         {isLocked && !match.isCompleted && (
-          <div className="flex flex-col items-center w-full mt-1 md:mt-2 gap-2">
-            <div className="flex items-center gap-1 text-destructive text-[9px] md:text-[10px] font-black uppercase">
-              <Lock size={10} /> Låst
+          <div className="flex flex-col items-center w-full mt-1.5 gap-1.5 border-t border-border/40 pt-1.5">
+            <div className="flex items-center gap-1 text-destructive text-[9px] md:text-[10px] font-black uppercase tracking-wider">
+              <Lock size={10} /> Låst (Tidsgräns passerad)
             </div>
+            
+            {((match.potentialPointsSign && match.potentialPointsSign > 0) || (match.potentialPointsWinner && match.potentialPointsWinner > 0)) && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg px-2.5 py-1 text-[10px] font-bold text-foreground/80 flex items-center gap-1.5 flex-wrap justify-center shadow-sm">
+                <span className="text-primary font-black uppercase text-[8px] bg-primary/10 px-1 py-0.2 rounded">POTENTIELLT</span>
+                <span>
+                  Möjlig vinst:{' '}
+                  <strong className="text-primary font-black">
+                    +{(match.potentialPointsSign || 0) + (match.potentialPointsWinner || 0)}P
+                  </strong>
+                </span>
+                {isKnockout && match.potentialPointsSign && match.potentialPointsWinner && (
+                  <span className="text-muted-foreground text-[9px]">
+                    ({match.potentialPointsSign}P full tid / {match.potentialPointsWinner}P vidare)
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

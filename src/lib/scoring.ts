@@ -212,3 +212,39 @@ export async function getPotentialWinningsForSign(matchId: string, predictedSign
   return basePoints * multiplier;
 }
 
+/**
+ * Beräknar potentiella poäng för avancemang (predictedWinner) i en slutspelsmatch,
+ * givet hur andra användare redan har tippat (Inverse Popularity).
+ */
+export async function getPotentialWinningsForWinner(matchId: string, teamName: string): Promise<number> {
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    include: { bets: true },
+  });
+
+  if (!match) return 0;
+
+  const stage = match.stage || "Group";
+  if (stage === "Group") return 0;
+
+  const multiplier = STAGE_MULTIPLIERS[stage] || 1;
+  const progressBets = match.bets.filter(bet => bet.predictedWinner !== null);
+  const totalProgressBets = progressBets.length;
+
+  if (totalProgressBets === 0) {
+    return MAX_BASE_POINTS * multiplier;
+  }
+
+  const betsForWinner = progressBets.filter(bet => bet.predictedWinner === teamName);
+  
+  // Lägg till +1 på totalen och +1 på vinnaren virtuellt för den hypotetiska uträkningen
+  const hypotheticalTotal = totalProgressBets + 1;
+  const hypotheticalWinnerBets = betsForWinner.length + 1;
+
+  const percentage = (hypotheticalWinnerBets / hypotheticalTotal) * 100;
+  const rawBasePoints = Math.max(MIN_BASE_POINTS, MAX_BASE_POINTS - percentage);
+  const basePoints = Math.round(rawBasePoints / 10) * 10;
+  
+  return basePoints * multiplier;
+}
+

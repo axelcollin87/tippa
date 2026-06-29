@@ -18,7 +18,7 @@ import TeamBadge from '@/components/TeamBadge';
 import LiveMatchCard from '@/components/LiveMatchCard';
 import InfoPopover from '@/components/InfoPopover';
 import DashboardTour from '@/components/DashboardTour';
-import { getPotentialWinningsForSign } from '@/lib/scoring';
+import { getPotentialWinningsForSign, getPotentialWinningsForWinner } from '@/lib/scoring';
 import Scoreboard from '@/components/Scoreboard';
 import UsernamePromptModal from '@/components/UsernamePromptModal';
 import MatchCard from '@/components/MatchCard';
@@ -110,9 +110,32 @@ async function DashboardContent({ session }: { session: any }) {
     });
   }
 
-  const upcomingMatches = allMatchesWithBets
-    .filter((m) => new Date(m.kickoff.getTime() - 60 * 60 * 1000) > now && !m.isCompleted)
+  const rawUpcomingMatches = allMatchesWithBets
+    .filter((m) => new Date(m.kickoff) > now && !m.isCompleted)
     .slice(0, 4);
+
+  const upcomingMatches = await Promise.all(
+    rawUpcomingMatches.map(async (match) => {
+      const myBet = userBets.find((b) => b.matchId === match.id);
+      let potentialPointsSign = 0;
+      let potentialPointsWinner = 0;
+
+      if (myBet) {
+        if (myBet.predictedSign) {
+          potentialPointsSign = await getPotentialWinningsForSign(match.id, myBet.predictedSign);
+        }
+        if (myBet.predictedWinner) {
+          potentialPointsWinner = await getPotentialWinningsForWinner(match.id, myBet.predictedWinner);
+        }
+      }
+
+      return {
+        ...match,
+        potentialPointsSign,
+        potentialPointsWinner,
+      };
+    })
+  );
 
   // En match räknas som aktiv/live i max 3 timmar (180 minuter) efter kickoff
   const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);

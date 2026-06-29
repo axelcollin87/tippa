@@ -76,12 +76,12 @@ export default function MatchCard({
         resultColorClass =
           'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] bg-green-500/5';
       } else if (isSignCorrect && !isWinnerCorrect) {
-        badgeText = `DELVIS VINST +${pointsEarned}P (1X2 RÄTT)`;
+        badgeText = isCompact ? `DELVIS +${pointsEarned}P` : `DELVIS VINST +${pointsEarned}P (1X2 RÄTT)`;
         badgeColorClass = 'bg-amber-500 text-white';
         resultColorClass =
           'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-amber-500/[0.02]';
       } else if (!isSignCorrect && isWinnerCorrect) {
-        badgeText = `DELVIS VINST +${pointsEarned}P (VIDARE RÄTT)`;
+        badgeText = isCompact ? `DELVIS +${pointsEarned}P` : `DELVIS VINST +${pointsEarned}P (VIDARE RÄTT)`;
         badgeColorClass = 'bg-amber-500 text-white';
         resultColorClass =
           'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-amber-500/[0.02]';
@@ -154,7 +154,7 @@ export default function MatchCard({
     >
       {match.isCompleted && (
         <div
-          className={`absolute top-0 right-0 ${isCompact ? '' : 'md:right-60'} px-3 py-1 text-[10px] font-black uppercase tracking-widest ${badgeColorClass}`}
+          className={`absolute top-0 right-0 ${isCompact ? '' : 'md:right-60'} ${isCompact ? 'px-2 py-0.5 text-[8px]' : 'px-3 py-1 text-[10px]'} font-black uppercase tracking-widest ${badgeColorClass}`}
         >
           {badgeText}
         </div>
@@ -339,7 +339,7 @@ export default function MatchCard({
                     <button
                       type="submit"
                       disabled={isLocked || isPending}
-                      className={`w-full ${isCompact ? 'h-9 text-sm rounded-lg' : 'md:w-12 h-11 md:h-12 text-xl md:text-2xl rounded-xl'} font-black transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
+                      className={`w-full ${isCompact ? 'h-8 text-xs rounded-md' : 'md:w-12 h-11 md:h-12 text-xl md:text-2xl rounded-xl'} font-black transition-all ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
                     >
                       {sign}
                     </button>

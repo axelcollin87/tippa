@@ -50,20 +50,55 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
     minute: '2-digit',
   });
 
-  const isCorrect = optimisticBet?.predictedSign === match.actualSign;
+  const isSignCorrect = optimisticBet?.predictedSign === match.actualSign;
+  const isWinnerCorrect = isKnockout && (optimisticBet?.predictedWinner === match.actualWinner);
   const pointsEarned = userBet
     ? userBet.pointsAwarded + userBet.pointsAwardedProgress
     : 0;
 
-  const resultColorClass = match.isCompleted
-    ? isCorrect
-      ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] bg-green-500/5'
-      : 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] bg-red-500/5'
-    : isLocked
-      ? 'border-border/50 opacity-80'
-      : !isBetComplete && isBetStarted
-        ? 'border-amber-500/50 hover:border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.15)] bg-amber-500/[0.02]'
-        : 'border-border hover:border-primary/50 shadow-md';
+  // Bestäm färg och text för färdigspelad match
+  let badgeText = '';
+  let badgeColorClass = '';
+  let resultColorClass = '';
+
+  if (match.isCompleted) {
+    if (isKnockout) {
+      if (isSignCorrect && isWinnerCorrect) {
+        badgeText = `VINST +${pointsEarned}P`;
+        badgeColorClass = 'bg-green-500 text-white';
+        resultColorClass = 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] bg-green-500/5';
+      } else if (isSignCorrect && !isWinnerCorrect) {
+        badgeText = `DELVIS VINST +${pointsEarned}P (1X2 RÄTT)`;
+        badgeColorClass = 'bg-amber-500 text-white';
+        resultColorClass = 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-amber-500/[0.02]';
+      } else if (!isSignCorrect && isWinnerCorrect) {
+        badgeText = `DELVIS VINST +${pointsEarned}P (VIDARE RÄTT)`;
+        badgeColorClass = 'bg-amber-500 text-white';
+        resultColorClass = 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-amber-500/[0.02]';
+      } else {
+        badgeText = 'FÖRLUST 0P';
+        badgeColorClass = 'bg-red-500 text-white';
+        resultColorClass = 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] bg-red-500/5';
+      }
+    } else {
+      // Gruppspel (endast 1X2)
+      if (isSignCorrect) {
+        badgeText = `VINST +${pointsEarned}P`;
+        badgeColorClass = 'bg-green-500 text-white';
+        resultColorClass = 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] bg-green-500/5';
+      } else {
+        badgeText = 'FÖRLUST 0P';
+        badgeColorClass = 'bg-red-500 text-white';
+        resultColorClass = 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] bg-red-500/5';
+      }
+    }
+  } else if (isLocked) {
+    resultColorClass = 'border-border/50 opacity-80';
+  } else if (!isBetComplete && isBetStarted) {
+    resultColorClass = 'border-amber-500/50 hover:border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.15)] bg-amber-500/[0.02]';
+  } else {
+    resultColorClass = 'border-border hover:border-primary/50 shadow-md';
+  }
 
   async function handleSignAction(formData: FormData) {
     const sign = formData.get('predictedSign') as string;
@@ -99,9 +134,9 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
     >
       {match.isCompleted && (
         <div
-          className={`absolute top-0 right-0 ${isCompact ? '' : 'md:right-60'} px-3 py-1 text-[10px] font-black uppercase tracking-widest ${isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
+          className={`absolute top-0 right-0 ${isCompact ? '' : 'md:right-60'} px-3 py-1 text-[10px] font-black uppercase tracking-widest ${badgeColorClass}`}
         >
-          {isCorrect ? `VINST +${pointsEarned}P` : 'FÖRLUST 0P'}
+          {badgeText}
         </div>
       )}
 
@@ -225,10 +260,10 @@ export default function MatchCard({ match, userBet, isCompact = false }: MatchCa
 
                 let btnClass = '';
                 if (match.isCompleted) {
-                  if (isSelected && isCorrect)
+                  if (isSelected && isSignCorrect)
                     btnClass =
                       'bg-green-500 text-white border-green-600 shadow-lg';
-                  else if (isSelected && !isCorrect)
+                  else if (isSelected && !isSignCorrect)
                     btnClass =
                       'bg-red-500 text-white border-red-600 opacity-80';
                   else if (!isSelected && isActual)

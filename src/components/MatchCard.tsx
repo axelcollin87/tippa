@@ -426,7 +426,7 @@ export default function MatchCard({
                       <button
                         type="submit"
                         disabled={isLocked || isPending}
-                        className={`w-full ${isCompact ? 'py-1.5 px-1 text-[10px]' : 'py-2 px-2 text-xs'} rounded-lg font-black uppercase tracking-wider transition-all truncate ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
+                        className={`w-full ${isCompact ? 'py-1 px-1 text-[9px] rounded-md' : 'py-2 px-2 text-xs rounded-lg'} font-black uppercase tracking-wider transition-all truncate ${btnClass} ${isLocked && !match.isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
                         title={getTeamInfo(team).name}
                       >
                         <span className="truncate block w-full">

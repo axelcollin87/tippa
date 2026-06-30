@@ -324,7 +324,7 @@ export default function MatchCard({
                       'bg-secondary text-muted-foreground opacity-40 grayscale';
                 } else {
                   btnClass = isSelected
-                    ? 'bg-primary text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.4)] scale-105 md:scale-110 z-10'
+                    ? `bg-primary text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.4)] ${isCompact ? 'scale-100 z-10' : 'scale-105 md:scale-110 z-10'}`
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-foreground border border-border';
                 }
 
